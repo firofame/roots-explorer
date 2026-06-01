@@ -175,6 +175,9 @@ export default function RootsExplorer() {
 	// Navigation: "dashboard" | "explorer" | "frequency" | "salah"
 	const [activeTab, setActiveTab] = useState<string>("dashboard");
 
+	// Focus study card mode: "recommend" (Next Best Root) | "daily" (Root of the Day)
+	const [focusMode, setFocusMode] = useState<"recommend" | "daily">("recommend");
+
 	// Learned roots state
 	const [learnedRoots, setLearnedRoots] = useState<Set<string>>(() => {
 		const saved = localStorage.getItem("learnedRoots");
@@ -352,6 +355,183 @@ export default function RootsExplorer() {
 		});
 	}, [salahDb, learnedRoots]);
 
+	// Helper to find the actual Arabic words recited in Salah that match a given root
+	const getSalahWordsForRoot = (rootStr: string) => {
+		if (!salahDb) return [];
+		const results: { text: string; sectionName: string; meaning?: string }[] = [];
+		const seen = new Set<string>();
+		
+		salahDb.forEach(section => {
+			section.verses.forEach(v => {
+				v.words.forEach(w => {
+					if (w.root === rootStr) {
+						const cleanText = w.text.trim();
+						const key = `${cleanText}-${section.name}`;
+						if (!seen.has(key)) {
+							seen.add(key);
+							results.push({
+								text: cleanText,
+								sectionName: section.name,
+								meaning: w.meaning
+							});
+						}
+					}
+				});
+			});
+		});
+		return results;
+	};
+
+	// 1. Calculate overall Salah coverage (percentage of known words across all prayer parts)
+	const overallSalahCoverage = useMemo(() => {
+		if (!salahDb) return 0;
+		let total = 0;
+		let known = 0;
+		salahDb.forEach((section) => {
+			section.verses.forEach((v) => {
+				v.words.forEach((w) => {
+					total++;
+					if (!w.root || learnedRoots.has(w.root)) {
+						known++;
+					}
+				});
+			});
+		});
+		return total > 0 ? parseFloat(((known / total) * 100).toFixed(1)) : 0;
+	}, [salahDb, learnedRoots]);
+
+	// 2. Count total unique roots in Salah
+	const uniqueSalahRootsCount = useMemo(() => {
+		if (!salahDb) return 0;
+		const rootsSet = new Set<string>();
+		salahDb.forEach(section => {
+			section.verses.forEach(v => {
+				v.words.forEach(w => {
+					if (w.root) rootsSet.add(w.root);
+				});
+			});
+		});
+		return rootsSet.size;
+	}, [salahDb]);
+
+	// 3. Count learned unique roots in Salah
+	const learnedSalahRootsCount = useMemo(() => {
+		if (!salahDb) return 0;
+		const rootsSet = new Set<string>();
+		salahDb.forEach(section => {
+			section.verses.forEach(v => {
+				v.words.forEach(w => {
+					if (w.root && learnedRoots.has(w.root)) {
+						rootsSet.add(w.root);
+					}
+				});
+			});
+		});
+		return rootsSet.size;
+	}, [salahDb, learnedRoots]);
+
+	// 4. Calculate individual root gains in overall Salah coverage
+	const salahRootGains = useMemo(() => {
+		if (!db || !salahDb) return [];
+		
+		// Total words across all of Salah
+		let totalSalahWords = 0;
+		salahDb.forEach(section => {
+			section.verses.forEach(v => {
+				totalSalahWords += v.words.length;
+			});
+		});
+		
+		// Map root -> frequency count in entire Salah
+		const overallCounts: Record<string, number> = {};
+		// Map sectionId -> root -> count in section
+		const sectionCounts: Record<string | number, Record<string, number>> = {};
+		// Map sectionId -> total words in section
+		const sectionTotalWords: Record<string | number, number> = {};
+
+		salahDb.forEach(section => {
+			sectionCounts[section.id] = {};
+			let sectionWords = 0;
+			
+			section.verses.forEach(v => {
+				sectionWords += v.words.length;
+				v.words.forEach(w => {
+					if (w.root) {
+						overallCounts[w.root] = (overallCounts[w.root] || 0) + 1;
+						sectionCounts[section.id][w.root] = (sectionCounts[section.id][w.root] || 0) + 1;
+					}
+				});
+			});
+			
+			sectionTotalWords[section.id] = sectionWords;
+		});
+
+		return db.roots.map(rootItem => {
+			const rootStr = rootItem.root;
+			const countInSalah = overallCounts[rootStr] || 0;
+			const overallGain = totalSalahWords > 0 ? (countInSalah / totalSalahWords) * 100 : 0;
+			
+			const sectionsAppeared: { sectionId: string | number; sectionName: string; count: number; gain: number }[] = [];
+			salahDb.forEach(section => {
+				const countInSection = sectionCounts[section.id][rootStr] || 0;
+				if (countInSection > 0) {
+					const sectTotal = sectionTotalWords[section.id];
+					const sectGain = sectTotal > 0 ? (countInSection / sectTotal) * 100 : 0;
+					sectionsAppeared.push({
+						sectionId: section.id,
+						sectionName: section.name,
+						count: countInSection,
+						gain: sectGain
+					});
+				}
+			});
+
+			return {
+				root: rootStr,
+				rootArabic: rootItem.rootArabic,
+				meaning: rootItem.meaning,
+				rank: rootItem.rank,
+				occurrences: rootItem.occurrences,
+				countInSalah,
+				overallGain,
+				sectionsAppeared
+			};
+		});
+	}, [db, salahDb]);
+
+	// 5. Unlearned Salah roots sorted by frequency in Salah (highest gain targets)
+	const unlearnedSalahGains = useMemo(() => {
+		return salahRootGains
+			.filter(g => !learnedRoots.has(g.root) && g.countInSalah > 0)
+			.sort((a, b) => b.countInSalah - a.countInSalah || a.rank - b.rank);
+	}, [salahRootGains, learnedRoots]);
+
+	// 6. Next Best Root: The unlearned root that maximizes Salah coverage (fallback to highest frequency Quran root if all Salah roots are learned)
+	const nextBestRoot = useMemo(() => {
+		if (unlearnedSalahGains.length > 0) {
+			return unlearnedSalahGains[0];
+		}
+		if (!db) return null;
+		const firstUnlearned = db.roots.find(r => !learnedRoots.has(r.root));
+		if (!firstUnlearned) return null;
+		return {
+			root: firstUnlearned.root,
+			rootArabic: firstUnlearned.rootArabic,
+			meaning: firstUnlearned.meaning,
+			rank: firstUnlearned.rank,
+			occurrences: firstUnlearned.occurrences,
+			countInSalah: 0,
+			overallGain: 0,
+			sectionsAppeared: [] as { sectionId: string | number; sectionName: string; count: number; gain: number }[]
+		};
+	}, [unlearnedSalahGains, db, learnedRoots]);
+
+	// Helper to lookup gain statistics for the seed Root of the Day
+	const rootOfTheDayGain = useMemo(() => {
+		if (!rootOfTheDay) return null;
+		return salahRootGains.find(g => g.root === rootOfTheDay.root) || null;
+	}, [rootOfTheDay, salahRootGains]);
+
 	// Filtered roots for ROOT EXPLORER
 	const explorerFilteredRoots = useMemo(() => {
 		if (!db) return [];
@@ -511,104 +691,283 @@ export default function RootsExplorer() {
 				{/* TAB 1: DASHBOARD */}
 				{activeTab === "dashboard" && (
 					<div className="tab-content dashboard-tab">
-						{/* Overall Stats grid */}
-						<div className="stats-grid">
-							<div className="stat-card gold-border">
-								<div className="circular-progress-container">
-									<svg viewBox="0 0 100 100" className="progress-ring">
-										<circle className="progress-ring-bg" cx="50" cy="50" r="40" />
-										<circle
-											className="progress-ring-fill"
-											cx="50"
-											cy="50"
-											r="40"
-											style={{
-												strokeDasharray: 251.2,
-												strokeDashoffset: 251.2 - (251.2 * quranCoverage) / 100,
-											}}
-										/>
-									</svg>
-									<div className="progress-text">
-										<span className="progress-num">{quranCoverage}%</span>
-										<span className="progress-lbl">Total Coverage</span>
-									</div>
-								</div>
-								<div className="stat-meta">
-									<h4>Qur'anic Vocabulary</h4>
-									<p>You have learned {learnedRoots.size} unique roots which cover {quranCoverage}% of the words in the Holy Qur'an.</p>
-								</div>
-							</div>
-
-							{rootOfTheDay && (
-								<div className="rotd-card">
-									<div className="rotd-top">
-										<span className="rotd-label">🌟 Root of the Day</span>
-										<button
-											type="button"
-											className={`rotd-learn-btn ${learnedRoots.has(rootOfTheDay.root) ? "learned" : ""}`}
-											onClick={() => toggleLearned(rootOfTheDay.root)}
-										>
-											{learnedRoots.has(rootOfTheDay.root) ? "✓ Learned" : "☆ Learn"}
-										</button>
-									</div>
-									<div className="rotd-body">
-										<span className="rotd-arabic">{rootOfTheDay.rootArabic}</span>
-										<div className="rotd-meta">
-											<span className="rotd-meaning">{rootOfTheDay.meaning || "—"}</span>
-											<span className="rotd-freq">Rank #{rootOfTheDay.rank} · {rootOfTheDay.occurrences} occurrences</span>
-										</div>
-									</div>
-									{rootOfTheDay.lemmas.length > 0 && (
-										<div className="rotd-lemmas">
-											{rootOfTheDay.lemmas.slice(0, 3).map((l) => (
-												<span key={l.lemma} className="rotd-lemma">{l.lemmaArabic}</span>
-											))}
-										</div>
-									)}
-									<button
-										type="button"
-										className="rotd-explore-link"
-										onClick={() => jumpToRootExplorer(rootOfTheDay.root)}
-									>
-										Explore full morphology →
-									</button>
-								</div>
-							)}
+						{/* Dashboard Header Info */}
+						<div className="dashboard-header-container">
+							<h2>Daily Prayer Dashboard</h2>
+							<p>Study by impact. Focus on the roots that optimize your daily Salah comprehension first.</p>
 						</div>
 
-						{/* Salah vocabulary coverage dashboard */}
-						<div className="dashboard-section card-box">
-							<h3 className="section-title">🕌 Salah Vocabulary Coverage</h3>
-							<p className="section-subtitle">Based on your learned roots, here is your vocabulary coverage for prayers:</p>
+						{/* Split Layout: Focus Target on Left, Overall Coverage on Right */}
+						<div className="dashboard-grid-layout">
+							{/* Left Column: Interactive Study Focus Card */}
+							<div className="hero-focus-card card-box">
+								<div className="focus-card-header">
+									<span className="focus-card-title">🎯 Current Study Target</span>
+									<div className="focus-toggle-switch">
+										<button
+											type="button"
+											className={`focus-toggle-btn ${focusMode === "recommend" ? "active" : ""}`}
+											onClick={() => setFocusMode("recommend")}
+										>
+											Recommended Target
+										</button>
+										<button
+											type="button"
+											className={`focus-toggle-btn ${focusMode === "daily" ? "active" : ""}`}
+											onClick={() => setFocusMode("daily")}
+										>
+											Root of the Day
+										</button>
+									</div>
+								</div>
 
-							<div className="salah-coverage-list">
-								{salahCoverageStats.map((section) => (
-									<div
-										key={section.id}
-										className="salah-coverage-item"
-										onClick={() => {
-											setSelectedSalahId(section.id);
-											setSelectedWord(null);
-											setActiveTab("salah");
-										}}
-									>
-										<div className="salah-item-info">
-											<span className="salah-item-name">{section.name}</span>
-											<span className="salah-item-stat">{section.percent}% coverage ({section.totalRoots} roots)</span>
+								{(() => {
+									const activeRoot = focusMode === "recommend" ? nextBestRoot : rootOfTheDayGain;
+									if (!activeRoot) {
+										return (
+											<div className="empty-message" style={{ padding: "40px 20px", textAlign: "center" }}>
+												🎉 SubhanAllah! You have learned all vocabulary roots in the system!
+											</div>
+										);
+									}
+
+									const isLearned = learnedRoots.has(activeRoot.root);
+									const recitedWords = getSalahWordsForRoot(activeRoot.root);
+
+									return (
+										<div className="focus-card-body">
+											<div className="focus-root-display">
+												<span className="focus-root-arabic">{activeRoot.rootArabic}</span>
+												<span className="focus-root-translit">{activeRoot.root}</span>
+												<span className="focus-root-translit" style={{ fontSize: '0.75rem', opacity: 0.6 }}>Rank #{activeRoot.rank}</span>
+											</div>
+
+											<div className="focus-root-details">
+												<div className="focus-root-meaning">"{activeRoot.meaning || "—"}"</div>
+
+												<div className="focus-root-stats-row">
+													<span>Occurrences: {activeRoot.occurrences}× in Qur'an</span>
+												</div>
+
+												{/* Recitations inside prayers */}
+												{recitedWords.length > 0 ? (
+													<div className="focus-root-recitations">
+														<div className="focus-recitation-title">You recite this in:</div>
+														<div className="focus-recitation-words">
+															{recitedWords.slice(0, 5).map((w, idx) => (
+																<span key={`${w.text}-${idx}`} className="focus-word-pill">
+																	{w.text}
+																</span>
+															))}
+															<span className="focus-section-link">
+																in {activeRoot.sectionsAppeared.map(s => s.sectionName).join(", ")}
+															</span>
+														</div>
+													</div>
+								) : (
+													<div className="focus-root-recitations">
+														<div className="focus-recitation-title">Linguistic Context:</div>
+														<span className="focus-section-link">Does not occur in prayers directly, but builds general Qur'anic vocabulary.</span>
+													</div>
+												)}
+
+												{/* Dynamic Expected Gain readout */}
+												{activeRoot.countInSalah > 0 ? (
+													<div className="focus-impact-gain">
+														<span className="focus-gain-percent">
+															{isLearned ? "✓" : `+${activeRoot.overallGain.toFixed(1)}%`}
+														</span>
+														<span>
+															{isLearned 
+																? "Salah coverage boost secured!" 
+																: `boost to overall Salah coverage upon learning.`}
+														</span>
+													</div>
+												) : (
+													<div className="focus-impact-gain no-gain">
+														<span>Focuses on general Quranic comprehension.</span>
+													</div>
+												)}
+
+												<div style={{ display: "flex", gap: "12px", marginTop: "4px" }}>
+													<button
+														type="button"
+														className={`focus-learn-btn ${isLearned ? "learned" : ""}`}
+														onClick={() => toggleLearned(activeRoot.root)}
+													>
+														{isLearned ? "✓ Learned" : "Mark as Learned"}
+													</button>
+													<button
+														type="button"
+														className="table-action-btn"
+														onClick={() => jumpToRootExplorer(activeRoot.root)}
+													>
+														Morphology →
+													</button>
+												</div>
+											</div>
 										</div>
-										<div className="salah-progress-track">
-											<div
-												className="salah-progress-fill"
+									);
+								})()}
+							</div>
+
+							{/* Right Column: Hero circular progress of Salah coverage & stats */}
+							<div className="card-box hero-progress-panel">
+								<div className="progress-header">
+									<h3>Salah Coverage</h3>
+									<p>Your understanding of recited daily prayers</p>
+								</div>
+
+								<div className="circular-progress-hero">
+									<div className="circular-progress-container" style={{ width: "110px", height: "110px" }}>
+										<svg viewBox="0 0 100 100" className="progress-ring">
+											<circle className="progress-ring-bg" cx="50" cy="50" r="40" />
+											<circle
+												className="progress-ring-fill"
+												cx="50"
+												cy="50"
+												r="40"
 												style={{
-													width: `${section.percent}%`,
-													background: section.percent === 100
-														? "linear-gradient(90deg, #10b981 0%, #059669 100%)"
-														: "linear-gradient(90deg, var(--gold-soft) 0%, #f1d56e 100%)"
+													strokeDasharray: 251.2,
+													strokeDashoffset: 251.2 - (251.2 * overallSalahCoverage) / 100,
 												}}
 											/>
+										</svg>
+										<div className="progress-text">
+											<span className="progress-num">{overallSalahCoverage}%</span>
+											<span className="progress-lbl">Salah Coverage</span>
 										</div>
 									</div>
-								))}
+								</div>
+
+								<div className="progress-substats-row">
+									<div className="substat-item">
+										<span className="substat-label">Quran Coverage</span>
+										<span className="substat-value">{quranCoverage}%</span>
+									</div>
+									<div className="substat-item">
+										<span className="substat-label">Salah Roots</span>
+										<span className="substat-value success">{learnedSalahRootsCount} / {uniqueSalahRootsCount}</span>
+									</div>
+									<div className="substat-item" style={{ gridColumn: "span 2" }}>
+										<span className="substat-label">Total Learned Roots</span>
+										<span className="substat-value">{learnedRoots.size} unique roots</span>
+									</div>
+								</div>
+							</div>
+						</div>
+
+						{/* Bottom Area: Optimization targets table & Breakdown */}
+						<div className="optimizations-section">
+							<div className="optimizations-grid">
+								{/* Optimization Target Roots Table */}
+								<div className="card-box">
+									<h3 className="section-title">🚀 Next Best Targets to Learn</h3>
+									<p className="section-subtitle">Maximize your daily prayer understanding by learning these roots next:</p>
+
+									<div className="salah-gain-table-wrapper">
+										<table className="salah-gain-table">
+											<thead>
+												<tr>
+													<th>Root</th>
+													<th>Meaning</th>
+													<th>Appears In</th>
+													<th style={{ textAlign: "right" }}>Salah Coverage Gain</th>
+													<th style={{ textAlign: "right" }}>Actions</th>
+												</tr>
+											</thead>
+											<tbody>
+												{unlearnedSalahGains.slice(0, 10).map((g) => {
+													return (
+														<tr key={g.root}>
+															<td>
+																<div className="gain-table-root-cell">
+																	<span className="gain-table-arabic">{g.rootArabic}</span>
+																	<span className="gain-table-translit">({g.root})</span>
+																</div>
+															</td>
+															<td>
+																<div className="gain-table-meaning" title={g.meaning}>
+																	{g.meaning}
+																</div>
+															</td>
+															<td>
+																<span className="focus-section-link">
+																	{g.sectionsAppeared.map(s => s.sectionName).join(", ")}
+																</span>
+															</td>
+															<td style={{ textAlign: "right" }}>
+																<span className="gain-table-badge">+{g.overallGain.toFixed(1)}%</span>
+															</td>
+															<td style={{ textAlign: "right" }}>
+																<div style={{ display: "inline-flex", gap: "8px" }}>
+																	<button
+																		type="button"
+																		className="table-action-btn"
+																		onClick={() => toggleLearned(g.root)}
+																	>
+																		Learn
+																	</button>
+																	<button
+																		type="button"
+																		className="table-action-btn"
+																		onClick={() => jumpToRootExplorer(g.root)}
+																		style={{ opacity: 0.8 }}
+																	>
+																		🔍
+																	</button>
+																</div>
+															</td>
+														</tr>
+													);
+												})}
+												{unlearnedSalahGains.length === 0 && (
+													<tr>
+														<td colSpan={5} className="table-empty" style={{ textAlign: "center", padding: "24px", color: "var(--text-muted)" }}>
+															🎉 SubhanAllah! You have learned all roots that appear in your daily prayers!
+														</td>
+													</tr>
+												)}
+											</tbody>
+										</table>
+									</div>
+								</div>
+
+								{/* Salah Sections Breakdown Grid */}
+								<div className="dashboard-section card-box">
+									<h3 className="section-title">🕌 Salah Sections Breakdown</h3>
+									<p className="section-subtitle">Select any prayer section to open its interactive reader in Salah Explorer:</p>
+
+									<div className="salah-coverage-list">
+										{salahCoverageStats.map((section) => (
+											<div
+												key={section.id}
+												className="salah-coverage-item"
+												onClick={() => {
+													setSelectedSalahId(section.id);
+													setSelectedWord(null);
+													setActiveTab("salah");
+												}}
+											>
+												<div className="salah-item-info">
+													<span className="salah-item-name">{section.name}</span>
+													<span className="salah-item-stat">{section.percent}% coverage ({section.totalRoots} roots)</span>
+												</div>
+												<div className="salah-progress-track">
+													<div
+														className="salah-progress-fill"
+														style={{
+															width: `${section.percent}%`,
+															background: section.percent === 100
+																? "linear-gradient(90deg, #10b981 0%, #059669 100%)"
+																: "linear-gradient(90deg, var(--gold-soft) 0%, #f1d56e 100%)"
+														}}
+													/>
+												</div>
+											</div>
+										))}
+									</div>
+								</div>
 							</div>
 						</div>
 					</div>
