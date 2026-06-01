@@ -8,10 +8,10 @@ function App() {
       <header className="app-header">
         <div className="logo-container">
           <span className="logo-icon">🌱</span>
-          <h1>Quranic Roots Explorer</h1>
+          <h1>Understand what you recite in Salah</h1>
         </div>
         <p className="app-subtitle">
-          Discover Quranic vocabulary, analyze root frequencies, and explore word morphology
+          Learn the most important Qur'anic roots one by one and track your progress toward understanding the vocabulary of your daily prayers.
         </p>
       </header>
 
@@ -20,7 +20,7 @@ function App() {
       </main>
 
       <footer className="app-footer">
-        <p>Quranic Roots Explorer · Built with React, Vite & TypeScript</p>
+        <p>Understand what you recite in Salah · Built with React, Vite & TypeScript</p>
       </footer>
     </div>
   );

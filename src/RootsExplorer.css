@@ -2072,4 +2072,215 @@
 	letter-spacing: 0.5px;
 }
 
+/* ── Secondary statistics on progress panel ── */
+.secondary-stats-container {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	background: rgba(255, 255, 255, 0.02);
+	border: 1px solid rgba(255, 255, 255, 0.05);
+	border-radius: var(--control-radius);
+	padding: 14px;
+	margin: 16px 0;
+	text-align: left;
+}
+
+.sec-stat-item {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding-bottom: 8px;
+	border-bottom: 1px dashed rgba(255, 255, 255, 0.05);
+}
+
+.sec-stat-item:last-child {
+	border-bottom: none;
+	padding-bottom: 0;
+}
+
+.sec-stat-label {
+	font-size: 0.78rem;
+	color: var(--text-muted);
+}
+
+.sec-stat-value {
+	font-size: 0.88rem;
+	font-weight: 600;
+	color: var(--text-main);
+}
+
+.sec-stat-value.success {
+	color: #34d399;
+}
+
+/* ── "Why learn this root" collapsible panel ── */
+.why-learn-container {
+	margin-top: 14px;
+	margin-bottom: 8px;
+	border: 1px solid rgba(212, 175, 55, 0.15);
+	border-radius: var(--control-radius);
+	background: rgba(26, 28, 41, 0.35);
+	overflow: hidden;
+	transition: border-color 0.2s ease;
+	text-align: left;
+}
+
+.why-learn-container:hover {
+	border-color: rgba(212, 175, 55, 0.3);
+}
+
+.why-learn-toggle-btn {
+	width: 100%;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	background: transparent;
+	border: none;
+	padding: 10px 14px;
+	font-family: inherit;
+	font-size: 0.82rem;
+	font-weight: 600;
+	color: var(--gold-soft);
+	cursor: pointer;
+	text-align: left;
+}
+
+.why-learn-toggle-btn:hover {
+	background: rgba(212, 175, 55, 0.04);
+}
+
+.why-learn-toggle-btn .toggle-arrow {
+	font-size: 0.65rem;
+	opacity: 0.7;
+}
+
+.why-learn-content {
+	padding: 14px;
+	border-top: 1px solid rgba(212, 175, 55, 0.1);
+	background: rgba(10, 11, 18, 0.5);
+	font-size: 0.8rem;
+	line-height: 1.45;
+}
+
+.why-learn-content.general-quranic p {
+	margin: 0;
+	color: var(--text-muted);
+}
+
+.why-learn-content.general-quranic strong {
+	color: var(--gold-highlight);
+}
+
+.relevance-summary-line {
+	font-size: 0.85rem;
+	font-weight: 500;
+	color: var(--gold-highlight);
+	margin-bottom: 12px;
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.relevance-summary-line strong {
+	color: #34d399;
+	font-size: 0.95rem;
+}
+
+.why-learn-grid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 16px;
+	margin-bottom: 12px;
+}
+
+@media (max-width: 600px) {
+	.why-learn-grid {
+		grid-template-columns: 1fr;
+		gap: 12px;
+	}
+}
+
+.why-learn-column {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.why-learn-sublabel {
+	font-size: 0.72rem;
+	color: var(--text-muted);
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+	font-weight: 600;
+}
+
+.why-learn-words-pills {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+}
+
+.why-word-pill {
+	display: inline-flex;
+	flex-direction: column;
+	align-items: center;
+	background: rgba(255, 255, 255, 0.03);
+	border: 1px solid rgba(255, 255, 255, 0.08);
+	border-radius: 6px;
+	padding: 4px 8px;
+	min-width: 60px;
+	text-align: center;
+}
+
+.why-word-ar {
+	font-family: "Scheherazade New", "Amiri", "Noto Naskh Arabic", serif;
+	font-size: 1rem;
+	color: var(--text-main);
+	line-height: 1.2;
+}
+
+.why-word-en {
+	font-size: 0.65rem;
+	color: var(--text-muted);
+	margin-top: 1px;
+}
+
+.why-learn-sections-list {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.why-learn-sections-list li {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	color: var(--text-muted);
+	font-size: 0.76rem;
+}
+
+.why-learn-sections-list .bullet-check {
+	color: #34d399;
+	font-weight: bold;
+}
+
+.why-learn-footer-boost {
+	border-top: 1px dashed rgba(255, 255, 255, 0.06);
+	padding-top: 10px;
+	margin-top: 8px;
+	font-size: 0.78rem;
+	color: var(--text-muted);
+}
+
+.why-learn-footer-boost strong {
+	color: #34d399;
+}
+
+.dashboard-intro-text strong {
+	color: var(--gold-highlight);
+}
+
 

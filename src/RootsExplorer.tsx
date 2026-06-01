@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import "./RootsExplorer.css";
 
 interface Lemma {
@@ -167,6 +167,18 @@ const EXTRA_SALAH_SECTIONS: SalahSurah[] = [
 	}
 ];
 
+const SALAH_DAILY_RECITATIONS: Record<string | number, { frequency: number; unit: string; description: string }> = {
+	1: { frequency: 17, unit: "times", description: "Recited in every Rakah" },
+	"tashahhud": { frequency: 9, unit: "times", description: "Recited in sitting positions" },
+	"salawat": { frequency: 5, unit: "times", description: "Recited in final sitting of prayers" },
+	"takbir": { frequency: 94, unit: "times", description: "Recited during physical transitions" },
+	"ruku": { frequency: 17, unit: "times", description: "Recited during bowing" },
+	"sujood": { frequency: 34, unit: "times", description: "Recited during prostration" },
+	112: { frequency: 3, unit: "times", description: "Commonly recited Surah" },
+	113: { frequency: 2, unit: "times", description: "Commonly recited Surah" },
+	114: { frequency: 2, unit: "times", description: "Commonly recited Surah" },
+};
+
 export default function RootsExplorer() {
 	const [db, setDb] = useState<RootsDatabase | null>(null);
 	const [salahDb, setSalahDb] = useState<SalahSurah[] | null>(null);
@@ -191,6 +203,19 @@ export default function RootsExplorer() {
 		const savedRoots = localStorage.getItem("learnedRoots");
 		return savedRoots ? (JSON.parse(savedRoots) as string[]) : [];
 	});
+
+	// Streak and activity tracking states
+	const [streakCount, setStreakCount] = useState<number>(() => {
+		const saved = localStorage.getItem("learningStreak");
+		return saved ? parseInt(saved, 10) : 0;
+	});
+	const [lastLearningDate, setLastLearningDate] = useState<string>(() => {
+		return localStorage.getItem("lastLearningDate") || "";
+	});
+
+	// Collapsible state for "Why is this root worth learning?"
+	const [studyWhyLearnOpen, setStudyWhyLearnOpen] = useState<boolean>(false);
+	const [detailWhyLearnOpen, setDetailWhyLearnOpen] = useState<boolean>(false);
 
 	// Root Explorer states
 	const [searchQuery, setSearchQuery] = useState<string>("");
@@ -262,6 +287,37 @@ export default function RootsExplorer() {
 		void loadData();
 	}, []);
 
+	// Helper to get formatted local date (YYYY-MM-DD)
+	const getLocalDateString = (dateObj: Date = new Date()) => {
+		const year = dateObj.getFullYear();
+		const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+		const day = String(dateObj.getDate()).padStart(2, '0');
+		return `${year}-${month}-${day}`;
+	};
+
+	// Helper to calculate difference in days between two YYYY-MM-DD strings
+	const getDaysDiff = (dateStr1: string, dateStr2: string) => {
+		if (!dateStr1 || !dateStr2) return 999;
+		const d1 = new Date(dateStr1);
+		const d2 = new Date(dateStr2);
+		d1.setHours(0, 0, 0, 0);
+		d2.setHours(0, 0, 0, 0);
+		const diffTime = Math.abs(d2.getTime() - d1.getTime());
+		return Math.round(diffTime / (1000 * 60 * 60 * 24));
+	};
+
+	// Check if learning streak is broken on load/activity changes
+	useEffect(() => {
+		if (lastLearningDate) {
+			const todayStr = getLocalDateString();
+			const diff = getDaysDiff(todayStr, lastLearningDate);
+			if (diff > 1) {
+				setStreakCount(0);
+				localStorage.setItem("learningStreak", "0");
+			}
+		}
+	}, [lastLearningDate]);
+
 	// Toggle learned status
 	const toggleLearned = (rootStr: string) => {
 		const next = new Set(learnedRoots);
@@ -273,6 +329,29 @@ export default function RootsExplorer() {
 			next.add(rootStr);
 			if (!nextHistory.includes(rootStr)) {
 				nextHistory.push(rootStr);
+			}
+
+			// Update learning streak
+			const todayStr = getLocalDateString();
+			if (!lastLearningDate) {
+				setStreakCount(1);
+				setLastLearningDate(todayStr);
+				localStorage.setItem("learningStreak", "1");
+				localStorage.setItem("lastLearningDate", todayStr);
+			} else if (lastLearningDate !== todayStr) {
+				const diff = getDaysDiff(todayStr, lastLearningDate);
+				if (diff === 1) {
+					const newStreak = streakCount + 1;
+					setStreakCount(newStreak);
+					setLastLearningDate(todayStr);
+					localStorage.setItem("learningStreak", String(newStreak));
+					localStorage.setItem("lastLearningDate", todayStr);
+				} else if (diff > 1) {
+					setStreakCount(1);
+					setLastLearningDate(todayStr);
+					localStorage.setItem("learningStreak", "1");
+					localStorage.setItem("lastLearningDate", todayStr);
+				}
 			}
 		}
 		setLearnedRoots(next);
@@ -588,6 +667,157 @@ export default function RootsExplorer() {
 		return salahRootGains.find(g => g.root === rootOfTheDay.root) || null;
 	}, [rootOfTheDay, salahRootGains]);
 
+	// Helper to calculate daily recitations and occurrences of a root in Salah
+	const getSalahRelevance = useCallback((rootStr: string) => {
+		if (!salahDb) return null;
+		
+		// Find all words in Salah matching this root
+		const matches: { text: string; meaning: string; sectionName: string; sectionId: string | number }[] = [];
+		const sectionCounts: Record<string | number, number> = {};
+		const sectionNames: Record<string | number, string> = {};
+		
+		salahDb.forEach(section => {
+			section.verses.forEach(v => {
+				v.words.forEach(w => {
+					if (w.root === rootStr) {
+						matches.push({
+							text: w.text,
+							meaning: w.meaning || "",
+							sectionName: section.name,
+							sectionId: section.id
+						});
+						sectionCounts[section.id] = (sectionCounts[section.id] || 0) + 1;
+						sectionNames[section.id] = section.name;
+					}
+				});
+			});
+		});
+
+		if (matches.length === 0) return null;
+
+		// Calculate total daily recitations
+		let dailyRecitations = 0;
+		const sectionsList: { name: string; id: string | number; count: number; dailyFreq: number; totalDaily: number }[] = [];
+		
+		Object.keys(sectionCounts).forEach(secId => {
+			const id = isNaN(Number(secId)) ? secId : Number(secId);
+			const count = sectionCounts[id];
+			const name = sectionNames[id];
+			const recConfig = SALAH_DAILY_RECITATIONS[id] || { frequency: 0, unit: "times", description: "" };
+			const totalDaily = count * recConfig.frequency;
+			dailyRecitations += totalDaily;
+			
+			sectionsList.push({
+				name,
+				id,
+				count,
+				dailyFreq: recConfig.frequency,
+				totalDaily
+			});
+		});
+
+		// Find unique Arabic words derived from this root in Salah
+		const uniqueArabicWordsMap: Record<string, string> = {};
+		matches.forEach(m => {
+			if (m.text) {
+				uniqueArabicWordsMap[m.text] = m.meaning;
+			}
+		});
+		
+		const uniqueArabicWords = Object.entries(uniqueArabicWordsMap).map(([text, meaning]) => ({
+			text,
+			meaning
+		}));
+
+		// Unlocked coverage gain
+		const gainObj = salahRootGains.find(g => g.root === rootStr);
+		const coverageGain = gainObj ? gainObj.overallGain : 0;
+
+		return {
+			dailyRecitations,
+			sections: sectionsList,
+			uniqueWords: uniqueArabicWords,
+			coverageGain
+		};
+	}, [salahDb, salahRootGains]);
+
+	// Render collapsible Why Learn section
+	const renderWhyLearnSection = (rootItem: RootData | any, isOpen: boolean, setIsOpen: (open: boolean) => void) => {
+		const relevance = getSalahRelevance(rootItem.root);
+		
+		if (!relevance) {
+			return (
+				<div className="why-learn-container">
+					<button 
+						type="button" 
+						className="why-learn-toggle-btn"
+						onClick={() => setIsOpen(!isOpen)}
+					>
+						<span>💡 Why is this root worth learning?</span>
+						<span className="toggle-arrow">{isOpen ? "▲" : "▼"}</span>
+					</button>
+					
+					{isOpen && (
+						<div className="why-learn-content general-quranic">
+							<p>This root does not occur directly in the daily prayers (Salah), but it is a valuable part of general Quranic vocabulary, occurring <strong>{rootItem.occurrences} times</strong> across the Quran.</p>
+						</div>
+					)}
+				</div>
+			);
+		}
+
+		return (
+			<div className="why-learn-container">
+				<button 
+					type="button" 
+					className={`why-learn-toggle-btn ${isOpen ? "active" : ""}`}
+					onClick={() => setIsOpen(!isOpen)}
+				>
+					<span>💡 Why is this root worth learning?</span>
+					<span className="toggle-arrow">{isOpen ? "▲" : "▼"}</span>
+				</button>
+				
+				{isOpen && (
+					<div className="why-learn-content salah-contextual">
+						<div className="relevance-summary-line">
+							You recite words from this root <strong>{relevance.dailyRecitations} times per day</strong> in Salah!
+						</div>
+						
+						<div className="why-learn-grid">
+							<div className="why-learn-column">
+								<span className="why-learn-sublabel">Appears in:</span>
+								<div className="why-learn-words-pills">
+									{relevance.uniqueWords.map((w, idx) => (
+										<span key={idx} className="why-word-pill" title={w.meaning}>
+											<span className="why-word-ar">{w.text}</span>
+											<span className="why-word-en">({w.meaning})</span>
+										</span>
+									))}
+								</div>
+							</div>
+							
+							<div className="why-learn-column">
+								<span className="why-learn-sublabel">Found in:</span>
+								<ul className="why-learn-sections-list">
+									{relevance.sections.map((sec, idx) => (
+										<li key={idx}>
+											<span className="bullet-check">✓</span> 
+											<span>{sec.name} ({sec.count}×)</span>
+										</li>
+									))}
+								</ul>
+							</div>
+						</div>
+						
+						<div className="why-learn-footer-boost">
+							<span>Learning this root unlocks: <strong>+{relevance.coverageGain.toFixed(1)}%</strong> Salah coverage</span>
+						</div>
+					</div>
+				)}
+			</div>
+		);
+	};
+
 	// Filtered roots for ROOT EXPLORER
 	const explorerFilteredRoots = useMemo(() => {
 		if (!db) return [];
@@ -750,7 +980,10 @@ export default function RootsExplorer() {
 						{/* Dashboard Header Info */}
 						<div className="dashboard-header-container">
 							<h2>Understand what you recite in Salah.</h2>
-							<p>Study by impact. Focus on the roots that optimize your daily Salah comprehension first.</p>
+							<p className="dashboard-intro-text">
+								To understand the vocabulary of your daily prayers, there are only <strong>{uniqueSalahRootsCount} roots</strong>.
+								You have learned <strong>{learnedSalahRootsCount}</strong>, with <strong>{uniqueSalahRootsCount - learnedSalahRootsCount}</strong> remaining.
+							</p>
 						</div>
 
 						{/* Three-Column Dashboard Grid Layout */}
@@ -788,7 +1021,6 @@ export default function RootsExplorer() {
 									}
 
 									const isLearned = learnedRoots.has(activeRoot.root);
-									const recitedWords = getSalahWordsForRoot(activeRoot.root);
 
 									return (
 										<div className="focus-card-body">
@@ -805,47 +1037,10 @@ export default function RootsExplorer() {
 													<span>Occurrences: {activeRoot.occurrences}× in Qur'an</span>
 												</div>
 
-												{/* Recitations inside prayers */}
-												{recitedWords.length > 0 ? (
-													<div className="focus-root-recitations">
-														<div className="focus-recitation-title">You recite this in:</div>
-														<div className="focus-recitation-words">
-															{recitedWords.slice(0, 5).map((w, idx) => (
-																<span key={`${w.text}-${idx}`} className="focus-word-pill">
-																	{w.text}
-																</span>
-															))}
-															<span className="focus-section-link">
-																in {activeRoot.sectionsAppeared.map(s => s.sectionName).join(", ")}
-															</span>
-														</div>
-													</div>
-												) : (
-													<div className="focus-root-recitations">
-														<div className="focus-recitation-title">Linguistic Context:</div>
-														<span className="focus-section-link">Does not occur in prayers directly, but builds general Qur'anic vocabulary.</span>
-													</div>
-												)}
+												{/* Collapsible Why Learn Section */}
+												{renderWhyLearnSection(activeRoot, studyWhyLearnOpen, setStudyWhyLearnOpen)}
 
-												{/* Dynamic Expected Gain readout */}
-												{activeRoot.countInSalah > 0 ? (
-													<div className="focus-impact-gain">
-														<span className="focus-gain-percent">
-															{isLearned ? "✓" : `+${activeRoot.overallGain.toFixed(1)}%`}
-														</span>
-														<span>
-															{isLearned 
-																? "Salah coverage boost secured!" 
-																: `boost to overall Salah coverage upon learning.`}
-														</span>
-													</div>
-												) : (
-													<div className="focus-impact-gain no-gain">
-														<span>Focuses on general Quranic comprehension.</span>
-													</div>
-												)}
-
-												<div style={{ display: "flex", gap: "12px", marginTop: "4px" }}>
+												<div style={{ display: "flex", gap: "12px", marginTop: "12px" }}>
 													<button
 														type="button"
 														className={`focus-learn-btn ${isLearned ? "learned" : ""}`}
@@ -958,6 +1153,22 @@ export default function RootsExplorer() {
 								<div className="progress-level-badge">
 									<span className="level-lbl">Level</span>
 									<span className="level-val">{getSalahCoverageLevel(overallSalahCoverage)}</span>
+								</div>
+
+								{/* Secondary learning stats block */}
+								<div className="secondary-stats-container">
+									<div className="sec-stat-item">
+										<span className="sec-stat-label">Current streak</span>
+										<span className="sec-stat-value">🔥 {streakCount} {streakCount === 1 ? "day" : "days"}</span>
+									</div>
+									<div className="sec-stat-item">
+										<span className="sec-stat-label">Roots learned</span>
+										<span className="sec-stat-value">{learnedSalahRootsCount} / {uniqueSalahRootsCount}</span>
+									</div>
+									<div className="sec-stat-item">
+										<span className="sec-stat-label">Coverage gained</span>
+										<span className="sec-stat-value success">+{overallSalahCoverage.toFixed(1)}%</span>
+									</div>
 								</div>
 
 								<div className="salah-path-overview">
@@ -1183,6 +1394,9 @@ export default function RootsExplorer() {
 												{learnedRoots.has(selectedRoot.root) ? "✓ Learned" : "☆ Learn Root"}
 											</button>
 										</div>
+
+										{/* Collapsible Why Learn Section */}
+										{renderWhyLearnSection(selectedRoot, detailWhyLearnOpen, setDetailWhyLearnOpen)}
 
 										{/* Lemmas Family */}
 										<div className="detail-section">
