@@ -1,0 +1,944 @@
+[
+  {
+    "id": 1,
+    "name": "Al-Fatihah",
+    "verses": [
+      {
+        "ayah": 1,
+        "words": [
+          {
+            "wordIndex": 1,
+            "text": "بِسْمِ",
+            "root": "smw",
+            "rootArabic": "س م و",
+            "lemma": "ٱسْم"
+          },
+          {
+            "wordIndex": 2,
+            "text": "ٱللَّهِ",
+            "root": "Alh",
+            "rootArabic": "ا ل ه",
+            "lemma": "ٱللَّه"
+          },
+          {
+            "wordIndex": 3,
+            "text": "ٱلرَّحْمَٰنِ",
+            "root": "rHm",
+            "rootArabic": "ر ح م",
+            "lemma": "رَّحْمَٰن"
+          },
+          {
+            "wordIndex": 4,
+            "text": "ٱلرَّحِيمِ",
+            "root": "rHm",
+            "rootArabic": "ر ح م",
+            "lemma": "رَّحِيم"
+          }
+        ]
+      },
+      {
+        "ayah": 2,
+        "words": [
+          {
+            "wordIndex": 1,
+            "text": "ٱلْحَمْدُ",
+            "root": "Hmd",
+            "rootArabic": "ح م د",
+            "lemma": "حَمْد"
+          },
+          {
+            "wordIndex": 2,
+            "text": "لِلَّهِ",
+            "root": "Alh",
+            "rootArabic": "ا ل ه",
+            "lemma": "ٱللَّه"
+          },
+          {
+            "wordIndex": 3,
+            "text": "رَبِّ",
+            "root": "rbb",
+            "rootArabic": "ر ب ب",
+            "lemma": "رَبّ"
+          },
+          {
+            "wordIndex": 4,
+            "text": "ٱلْعَٰلَمِينَ",
+            "root": "Elm",
+            "rootArabic": "ع ل م",
+            "lemma": "عَٰلَمِين"
+          }
+        ]
+      },
+      {
+        "ayah": 3,
+        "words": [
+          {
+            "wordIndex": 1,
+            "text": "ٱلرَّحْمَٰنِ",
+            "root": "rHm",
+            "rootArabic": "ر ح م",
+            "lemma": "رَّحْمَٰن"
+          },
+          {
+            "wordIndex": 2,
+            "text": "ٱلرَّحِيمِ",
+            "root": "rHm",
+            "rootArabic": "ر ح م",
+            "lemma": "رَّحِيم"
+          }
+        ]
+      },
+      {
+        "ayah": 4,
+        "words": [
+          {
+            "wordIndex": 1,
+            "text": "مَٰلِكِ",
+            "root": "mlk",
+            "rootArabic": "م ل ك",
+            "lemma": "مَٰلِك"
+          },
+          {
+            "wordIndex": 2,
+            "text": "يَوْمِ",
+            "root": "ywm",
+            "rootArabic": "ي و م",
+            "lemma": "يَوْم"
+          },
+          {
+            "wordIndex": 3,
+            "text": "ٱلدِّينِ",
+            "root": "dyn",
+            "rootArabic": "د ي ن",
+            "lemma": "دِين"
+          }
+        ]
+      },
+      {
+        "ayah": 5,
+        "words": [
+          {
+            "wordIndex": 1,
+            "text": "إِيَّاكَ",
+            "root": null,
+            "rootArabic": null,
+            "lemma": "إِيَّا"
+          },
+          {
+            "wordIndex": 2,
+            "text": "نَعْبُدُ",
+            "root": "Ebd",
+            "rootArabic": "ع ب د",
+            "lemma": "عَبَدَ"
+          },
+          {
+            "wordIndex": 3,
+            "text": "وَإِيَّاكَ",
+            "root": null,
+            "rootArabic": null,
+            "lemma": "إِيَّا"
+          },
+          {
+            "wordIndex": 4,
+            "text": "نَسْتَعِينُ",
+            "root": "Ewn",
+            "rootArabic": "ع و ن",
+            "lemma": "ٱسْتَعِينُ"
+          }
+        ]
+      },
+      {
+        "ayah": 6,
+        "words": [
+          {
+            "wordIndex": 1,
+            "text": "ٱهْدِنَا",
+            "root": "hdy",
+            "rootArabic": "ه د ي",
+            "lemma": "هَدَى"
+          },
+          {
+            "wordIndex": 2,
+            "text": "ٱلصِّرَٰطَ",
+            "root": "SrT",
+            "rootArabic": "ص ر ط",
+            "lemma": "صِرَٰط"
+          },
+          {
+            "wordIndex": 3,
+            "text": "ٱلْمُسْتَقِيمَ",
+            "root": "qwm",
+            "rootArabic": "ق و م",
+            "lemma": "مُّسْتَقِيم"
+          }
+        ]
+      },
+      {
+        "ayah": 7,
+        "words": [
+          {
+            "wordIndex": 1,
+            "text": "صِرَٰطَ",
+            "root": "SrT",
+            "rootArabic": "ص ر ط",
+            "lemma": "صِرَٰط"
+          },
+          {
+            "wordIndex": 2,
+            "text": "ٱلَّذِينَ",
+            "root": null,
+            "rootArabic": null,
+            "lemma": "ٱلَّذِى"
+          },
+          {
+            "wordIndex": 3,
+            "text": "أَنْعَمْتَ",
+            "root": "nEm",
+            "rootArabic": "ن ع م",
+            "lemma": "أَنْعَمَ"
+          },
+          {
+            "wordIndex": 4,
+            "text": "عَلَيْهِمْ",
+            "root": null,
+            "rootArabic": null,
+            "lemma": "عَلَىٰ"
+          },
+          {
+            "wordIndex": 5,
+            "text": "غَيْرِ",
+            "root": "gyr",
+            "rootArabic": "غ ي ر",
+            "lemma": "غَيْر"
+          },
+          {
+            "wordIndex": 6,
+            "text": "ٱلْمَغْضُوبِ",
+            "root": "gDb",
+            "rootArabic": "غ ض ب",
+            "lemma": "مَغْضُوب"
+          },
+          {
+            "wordIndex": 7,
+            "text": "عَلَيْهِمْ",
+            "root": null,
+            "rootArabic": null,
+            "lemma": "عَلَىٰ"
+          },
+          {
+            "wordIndex": 8,
+            "text": "وَلَا",
+            "root": null,
+            "rootArabic": null,
+            "lemma": "لَا"
+          },
+          {
+            "wordIndex": 9,
+            "text": "ٱلضَّا^لِّينَ",
+            "root": "Dll",
+            "rootArabic": "ض ل ل",
+            "lemma": "ضَا^لّ"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 112,
+    "name": "Al-Ikhlas",
+    "verses": [
+      {
+        "ayah": 1,
+        "words": [
+          {
+            "wordIndex": 1,
+            "text": "قُلْ",
+            "root": "qwl",
+            "rootArabic": "ق و ل",
+            "lemma": "قَالَ"
+          },
+          {
+            "wordIndex": 2,
+            "text": "هُوَ",
+            "root": null,
+            "rootArabic": null,
+            "lemma": null
+          },
+          {
+            "wordIndex": 3,
+            "text": "ٱللَّهُ",
+            "root": "Alh",
+            "rootArabic": "ا ل ه",
+            "lemma": "ٱللَّه"
+          },
+          {
+            "wordIndex": 4,
+            "text": "أَحَدٌ",
+            "root": "AHd",
+            "rootArabic": "ا ح د",
+            "lemma": "أَحَد"
+          }
+        ]
+      },
+      {
+        "ayah": 2,
+        "words": [
+          {
+            "wordIndex": 1,
+            "text": "ٱللَّهُ",
+            "root": "Alh",
+            "rootArabic": "ا ل ه",
+            "lemma": "ٱللَّه"
+          },
+          {
+            "wordIndex": 2,
+            "text": "ٱلصَّمَدُ",
+            "root": "Smd",
+            "rootArabic": "ص م د",
+            "lemma": "صَّمَد"
+          }
+        ]
+      },
+      {
+        "ayah": 3,
+        "words": [
+          {
+            "wordIndex": 1,
+            "text": "لَمْ",
+            "root": null,
+            "rootArabic": null,
+            "lemma": "لَم"
+          },
+          {
+            "wordIndex": 2,
+            "text": "يَلِدْ",
+            "root": "wld",
+            "rootArabic": "و ل د",
+            "lemma": "وَلَدَ"
+          },
+          {
+            "wordIndex": 3,
+            "text": "وَلَمْ",
+            "root": null,
+            "rootArabic": null,
+            "lemma": "لَم"
+          },
+          {
+            "wordIndex": 4,
+            "text": "يُولَدْ",
+            "root": "wld",
+            "rootArabic": "و ل د",
+            "lemma": "وَلَدَ"
+          }
+        ]
+      },
+      {
+        "ayah": 4,
+        "words": [
+          {
+            "wordIndex": 1,
+            "text": "وَلَمْ",
+            "root": null,
+            "rootArabic": null,
+            "lemma": "لَم"
+          },
+          {
+            "wordIndex": 2,
+            "text": "يَكُن",
+            "root": "kwn",
+            "rootArabic": "ك و ن",
+            "lemma": "كَانَ"
+          },
+          {
+            "wordIndex": 3,
+            "text": "لَّهُ,",
+            "root": null,
+            "rootArabic": null,
+            "lemma": null
+          },
+          {
+            "wordIndex": 4,
+            "text": "كُفُوًا",
+            "root": "kfA",
+            "rootArabic": "ك ف ا",
+            "lemma": "كُفُو"
+          },
+          {
+            "wordIndex": 5,
+            "text": "أَحَدٌ[",
+            "root": "AHd",
+            "rootArabic": "ا ح د",
+            "lemma": "أَحَد"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 113,
+    "name": "Al-Falaq",
+    "verses": [
+      {
+        "ayah": 1,
+        "words": [
+          {
+            "wordIndex": 1,
+            "text": "قُلْ",
+            "root": "qwl",
+            "rootArabic": "ق و ل",
+            "lemma": "قَالَ"
+          },
+          {
+            "wordIndex": 2,
+            "text": "أَعُوذُ",
+            "root": "Ew*",
+            "rootArabic": "ع و ذ",
+            "lemma": "عُذْ"
+          },
+          {
+            "wordIndex": 3,
+            "text": "بِرَبِّ",
+            "root": "rbb",
+            "rootArabic": "ر ب ب",
+            "lemma": "رَبّ"
+          },
+          {
+            "wordIndex": 4,
+            "text": "ٱلْفَلَقِ",
+            "root": "flq",
+            "rootArabic": "ف ل ق",
+            "lemma": "فَلَق"
+          }
+        ]
+      },
+      {
+        "ayah": 2,
+        "words": [
+          {
+            "wordIndex": 1,
+            "text": "مِن",
+            "root": null,
+            "rootArabic": null,
+            "lemma": "مِن"
+          },
+          {
+            "wordIndex": 2,
+            "text": "شَرِّ",
+            "root": "$rr",
+            "rootArabic": "ش ر ر",
+            "lemma": "شَرّ"
+          },
+          {
+            "wordIndex": 3,
+            "text": "مَا",
+            "root": null,
+            "rootArabic": null,
+            "lemma": "مَا"
+          },
+          {
+            "wordIndex": 4,
+            "text": "خَلَقَ",
+            "root": "xlq",
+            "rootArabic": "خ ل ق",
+            "lemma": "خَلَقَ"
+          }
+        ]
+      },
+      {
+        "ayah": 3,
+        "words": [
+          {
+            "wordIndex": 1,
+            "text": "وَمِن",
+            "root": null,
+            "rootArabic": null,
+            "lemma": "مِن"
+          },
+          {
+            "wordIndex": 2,
+            "text": "شَرِّ",
+            "root": "$rr",
+            "rootArabic": "ش ر ر",
+            "lemma": "شَرّ"
+          },
+          {
+            "wordIndex": 3,
+            "text": "غَاسِقٍ",
+            "root": "gsq",
+            "rootArabic": "غ س ق",
+            "lemma": "غَاسِق"
+          },
+          {
+            "wordIndex": 4,
+            "text": "إِذَا",
+            "root": null,
+            "rootArabic": null,
+            "lemma": "إِذَا"
+          },
+          {
+            "wordIndex": 5,
+            "text": "وَقَبَ",
+            "root": "wqb",
+            "rootArabic": "و ق ب",
+            "lemma": "وَقَبَ"
+          }
+        ]
+      },
+      {
+        "ayah": 4,
+        "words": [
+          {
+            "wordIndex": 1,
+            "text": "وَمِن",
+            "root": null,
+            "rootArabic": null,
+            "lemma": "مِن"
+          },
+          {
+            "wordIndex": 2,
+            "text": "شَرِّ",
+            "root": "$rr",
+            "rootArabic": "ش ر ر",
+            "lemma": "شَرّ"
+          },
+          {
+            "wordIndex": 3,
+            "text": "ٱلنَّفَّٰثَٰتِ",
+            "root": "nfv",
+            "rootArabic": "ن ف ث",
+            "lemma": "نَّفَّٰثَٰت"
+          },
+          {
+            "wordIndex": 4,
+            "text": "فِى",
+            "root": null,
+            "rootArabic": null,
+            "lemma": "فِى"
+          },
+          {
+            "wordIndex": 5,
+            "text": "ٱلْعُقَدِ",
+            "root": "Eqd",
+            "rootArabic": "ع ق د",
+            "lemma": "عُقْدَة"
+          }
+        ]
+      },
+      {
+        "ayah": 5,
+        "words": [
+          {
+            "wordIndex": 1,
+            "text": "وَمِن",
+            "root": null,
+            "rootArabic": null,
+            "lemma": "مِن"
+          },
+          {
+            "wordIndex": 2,
+            "text": "شَرِّ",
+            "root": "$rr",
+            "rootArabic": "ش ر ر",
+            "lemma": "شَرّ"
+          },
+          {
+            "wordIndex": 3,
+            "text": "حَاسِدٍ",
+            "root": "Hsd",
+            "rootArabic": "ح س د",
+            "lemma": "حَاسِد"
+          },
+          {
+            "wordIndex": 4,
+            "text": "إِذَا",
+            "root": null,
+            "rootArabic": null,
+            "lemma": "إِذَا"
+          },
+          {
+            "wordIndex": 5,
+            "text": "حَسَدَ",
+            "root": "Hsd",
+            "rootArabic": "ح س د",
+            "lemma": "حَسَدَ"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 114,
+    "name": "An-Nas",
+    "verses": [
+      {
+        "ayah": 1,
+        "words": [
+          {
+            "wordIndex": 1,
+            "text": "قُلْ",
+            "root": "qwl",
+            "rootArabic": "ق و ل",
+            "lemma": "قَالَ"
+          },
+          {
+            "wordIndex": 2,
+            "text": "أَعُوذُ",
+            "root": "Ew*",
+            "rootArabic": "ع و ذ",
+            "lemma": "عُذْ"
+          },
+          {
+            "wordIndex": 3,
+            "text": "بِرَبِّ",
+            "root": "rbb",
+            "rootArabic": "ر ب ب",
+            "lemma": "رَبّ"
+          },
+          {
+            "wordIndex": 4,
+            "text": "ٱلنَّاسِ",
+            "root": "nws",
+            "rootArabic": "ن و س",
+            "lemma": "نَّاس"
+          }
+        ]
+      },
+      {
+        "ayah": 2,
+        "words": [
+          {
+            "wordIndex": 1,
+            "text": "مَلِكِ",
+            "root": "mlk",
+            "rootArabic": "م ل ك",
+            "lemma": "مَلِك"
+          },
+          {
+            "wordIndex": 2,
+            "text": "ٱلنَّاسِ",
+            "root": "nws",
+            "rootArabic": "ن و س",
+            "lemma": "نَّاس"
+          }
+        ]
+      },
+      {
+        "ayah": 3,
+        "words": [
+          {
+            "wordIndex": 1,
+            "text": "إِلَٰهِ",
+            "root": "Alh",
+            "rootArabic": "ا ل ه",
+            "lemma": "إِلَٰه"
+          },
+          {
+            "wordIndex": 2,
+            "text": "ٱلنَّاسِ",
+            "root": "nws",
+            "rootArabic": "ن و س",
+            "lemma": "نَّاس"
+          }
+        ]
+      },
+      {
+        "ayah": 4,
+        "words": [
+          {
+            "wordIndex": 1,
+            "text": "مِن",
+            "root": null,
+            "rootArabic": null,
+            "lemma": "مِن"
+          },
+          {
+            "wordIndex": 2,
+            "text": "شَرِّ",
+            "root": "$rr",
+            "rootArabic": "ش ر ر",
+            "lemma": "شَرّ"
+          },
+          {
+            "wordIndex": 3,
+            "text": "ٱلْوَسْوَاسِ",
+            "root": "wsws",
+            "rootArabic": "و س و س",
+            "lemma": "وَسْوَاس"
+          },
+          {
+            "wordIndex": 4,
+            "text": "ٱلْخَنَّاسِ",
+            "root": "xns",
+            "rootArabic": "خ ن س",
+            "lemma": "خَنَّاس"
+          }
+        ]
+      },
+      {
+        "ayah": 5,
+        "words": [
+          {
+            "wordIndex": 1,
+            "text": "ٱلَّذِى",
+            "root": null,
+            "rootArabic": null,
+            "lemma": "ٱلَّذِى"
+          },
+          {
+            "wordIndex": 2,
+            "text": "يُوَسْوِسُ",
+            "root": "wsws",
+            "rootArabic": "و س و س",
+            "lemma": "وَسْوَسَ"
+          },
+          {
+            "wordIndex": 3,
+            "text": "فِى",
+            "root": null,
+            "rootArabic": null,
+            "lemma": "فِى"
+          },
+          {
+            "wordIndex": 4,
+            "text": "صُدُورِ",
+            "root": "Sdr",
+            "rootArabic": "ص د ر",
+            "lemma": "صَدْر"
+          },
+          {
+            "wordIndex": 5,
+            "text": "ٱلنَّاسِ",
+            "root": "nws",
+            "rootArabic": "ن و س",
+            "lemma": "نَّاس"
+          }
+        ]
+      },
+      {
+        "ayah": 6,
+        "words": [
+          {
+            "wordIndex": 1,
+            "text": "مِنَ",
+            "root": null,
+            "rootArabic": null,
+            "lemma": "مِن"
+          },
+          {
+            "wordIndex": 2,
+            "text": "ٱلْجِنَّةِ",
+            "root": "jnn",
+            "rootArabic": "ج ن ن",
+            "lemma": "جِنَّة"
+          },
+          {
+            "wordIndex": 3,
+            "text": "وَٱلنَّاسِ",
+            "root": "nws",
+            "rootArabic": "ن و س",
+            "lemma": "نَّاس"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "tashahhud",
+    "name": "Tashahhud",
+    "verses": [
+      {
+        "ayah": 1,
+        "words": [
+          {
+            "text": "التَّحِيَّاتُ",
+            "root": "Hyy",
+            "rootArabic": "ح ي ي",
+            "meaning": "greeting, life, salutations"
+          },
+          {
+            "text": "لِلَّهِ",
+            "root": "Alh",
+            "rootArabic": "ا ل ه",
+            "meaning": "Allah, God"
+          },
+          {
+            "text": "وَالصَّلَوَاتُ",
+            "root": "Slw",
+            "rootArabic": "ص ل و",
+            "meaning": "prayers, blessings"
+          },
+          {
+            "text": "وَالطَّيِّبَاتُ",
+            "root": "Tyb",
+            "rootArabic": "ط ي ب",
+            "meaning": "goodness, pure things"
+          }
+        ]
+      },
+      {
+        "ayah": 2,
+        "words": [
+          {
+            "text": "السَّلَامُ",
+            "root": "slm",
+            "rootArabic": "س ل م",
+            "meaning": "peace, safety"
+          },
+          {
+            "text": "عَلَيْكَ",
+            "root": "Ely",
+            "rootArabic": "ع ل ي",
+            "meaning": "on you, high"
+          },
+          {
+            "text": "أَيُّهَا",
+            "root": "Ayh",
+            "rootArabic": "أ ي ه",
+            "meaning": "O you"
+          },
+          {
+            "text": "النَّبِيُّ",
+            "root": "nb>",
+            "rootArabic": "ن ب أ",
+            "meaning": "prophet, news"
+          },
+          {
+            "text": "وَرَحْمَةُ",
+            "root": "rHm",
+            "rootArabic": "ر ح م",
+            "meaning": "mercy, compassion"
+          },
+          {
+            "text": "اللَّهِ",
+            "root": "Alh",
+            "rootArabic": "ا ل ه",
+            "meaning": "Allah, God"
+          },
+          {
+            "text": "وَبَرَكَاتُهُ",
+            "root": "brk",
+            "rootArabic": "ب ر ك",
+            "meaning": "blessings"
+          }
+        ]
+      },
+      {
+        "ayah": 3,
+        "words": [
+          {
+            "text": "السَّلَامُ",
+            "root": "slm",
+            "rootArabic": "س ل م",
+            "meaning": "peace, safety"
+          },
+          {
+            "text": "عَلَيْنَا",
+            "root": "Ely",
+            "rootArabic": "ع ل ي",
+            "meaning": "on us, high"
+          },
+          {
+            "text": "وَعَلَى",
+            "root": "Ely",
+            "rootArabic": "ع ل ي",
+            "meaning": "on, above"
+          },
+          {
+            "text": "عِبَادِ",
+            "root": "Ebd",
+            "rootArabic": "ع ب د",
+            "meaning": "servants, worshippers"
+          },
+          {
+            "text": "اللَّهِ",
+            "root": "Alh",
+            "rootArabic": "ا ل ه",
+            "meaning": "Allah, God"
+          },
+          {
+            "text": "الصَّالِحِينَ",
+            "root": "SlH",
+            "rootArabic": "ص ل ح",
+            "meaning": "righteous, good"
+          }
+        ]
+      },
+      {
+        "ayah": 4,
+        "words": [
+          {
+            "text": "أَشْهَدُ",
+            "root": "$hd",
+            "rootArabic": "ش ه د",
+            "meaning": "witness, testify"
+          },
+          {
+            "text": "أَنْ",
+            "root": null,
+            "rootArabic": null,
+            "meaning": "that"
+          },
+          {
+            "text": "لَا",
+            "root": null,
+            "rootArabic": null,
+            "meaning": "no"
+          },
+          {
+            "text": "إِلَهَ",
+            "root": "Alh",
+            "rootArabic": "ا ل ه",
+            "meaning": "god, deity"
+          },
+          {
+            "text": "إِلَّا",
+            "root": null,
+            "rootArabic": null,
+            "meaning": "except"
+          },
+          {
+            "text": "اللَّهُ",
+            "root": "Alh",
+            "rootArabic": "ا ل ه",
+            "meaning": "Allah, God"
+          }
+        ]
+      },
+      {
+        "ayah": 5,
+        "words": [
+          {
+            "text": "وَأَشْهَدُ",
+            "root": "$hd",
+            "rootArabic": "ش ه د",
+            "meaning": "witness, testify"
+          },
+          {
+            "text": "أَنَّ",
+            "root": null,
+            "rootArabic": null,
+            "meaning": "that"
+          },
+          {
+            "text": "مُحَمَّدًا",
+            "root": "Hmd",
+            "rootArabic": "ح م د",
+            "meaning": "Praiseworthy, Muhammad"
+          },
+          {
+            "text": "عَبْدُهُ",
+            "root": "Ebd",
+            "rootArabic": "ع ب د",
+            "meaning": "His servant"
+          },
+          {
+            "text": "وَرَسُولُهُ",
+            "root": "rsl",
+            "rootArabic": "ر س ل",
+            "meaning": "His messenger"
+          }
+        ]
+      }
+    ]
+  }
+]
