@@ -184,6 +184,14 @@ export default function RootsExplorer() {
 		return saved ? new Set(JSON.parse(saved) as string[]) : new Set();
 	});
 
+	// Learned roots history (to track chronological order of learning)
+	const [learnedHistory, setLearnedHistory] = useState<string[]>(() => {
+		const savedHistory = localStorage.getItem("learnedRootsHistory");
+		if (savedHistory) return JSON.parse(savedHistory) as string[];
+		const savedRoots = localStorage.getItem("learnedRoots");
+		return savedRoots ? (JSON.parse(savedRoots) as string[]) : [];
+	});
+
 	// Root Explorer states
 	const [searchQuery, setSearchQuery] = useState<string>("");
 	const [selectedRoot, setSelectedRoot] = useState<RootData | null>(null);
@@ -257,10 +265,20 @@ export default function RootsExplorer() {
 	// Toggle learned status
 	const toggleLearned = (rootStr: string) => {
 		const next = new Set(learnedRoots);
-		if (next.has(rootStr)) next.delete(rootStr);
-		else next.add(rootStr);
+		let nextHistory = [...learnedHistory];
+		if (next.has(rootStr)) {
+			next.delete(rootStr);
+			nextHistory = nextHistory.filter((x) => x !== rootStr);
+		} else {
+			next.add(rootStr);
+			if (!nextHistory.includes(rootStr)) {
+				nextHistory.push(rootStr);
+			}
+		}
 		setLearnedRoots(next);
+		setLearnedHistory(nextHistory);
 		localStorage.setItem("learnedRoots", JSON.stringify(Array.from(next)));
+		localStorage.setItem("learnedRootsHistory", JSON.stringify(nextHistory));
 	};
 
 	// Helper to strip diacritics / normalize Arabic for fuzzy matching
@@ -271,19 +289,6 @@ export default function RootsExplorer() {
 			.replace(/\s+/g, "") // remove spaces
 			.toLowerCase();
 	};
-
-	// Overall Quranic segments coverage
-	const quranCoverage = useMemo(() => {
-		if (!db) return 0;
-		let sum = 0;
-		learnedRoots.forEach((r) => {
-			const item = db.roots.find((x) => x.root === r);
-			if (item) sum += item.occurrences;
-		});
-		return db.segmentsWithRoot > 0
-			? parseFloat(((sum / db.segmentsWithRoot) * 100).toFixed(1))
-			: 0;
-	}, [db, learnedRoots]);
 
 	// Root of the day (seeded by date calendar days)
 	const rootOfTheDay = useMemo<RootData | null>(() => {
@@ -399,6 +404,57 @@ export default function RootsExplorer() {
 		});
 		return total > 0 ? parseFloat(((known / total) * 100).toFixed(1)) : 0;
 	}, [salahDb, learnedRoots]);
+
+	// Qualitative interpretation level based on Salah coverage
+	const getSalahCoverageLevel = (coverage: number) => {
+		if (coverage < 20) return "Recognizing familiar words";
+		if (coverage < 40) return "Understanding key prayer vocabulary";
+		if (coverage < 60) return "Following much of the meaning";
+		if (coverage < 80) return "Understanding most recited prayers";
+		return "Near-complete Salah vocabulary mastery";
+	};
+
+	// Last learned details logic to track momentum and show coverage increases
+	const lastLearnedDetails = useMemo(() => {
+		if (learnedHistory.length === 0 || !db || !salahDb) return null;
+		const lastRootStr = learnedHistory[learnedHistory.length - 1];
+		const rootItem = db.roots.find((r) => r.root === lastRootStr);
+		if (!rootItem) return null;
+
+		// Calculate what Salah coverage was *before* learning this root
+		let totalWords = 0;
+		let knownWith = 0;
+		let knownWithout = 0;
+		
+		salahDb.forEach((section) => {
+			section.verses.forEach((v) => {
+				v.words.forEach((w) => {
+					totalWords++;
+					const hasRoot = w.root !== null;
+					if (!hasRoot || learnedRoots.has(w.root!)) {
+						knownWith++;
+					}
+					if (!hasRoot || (learnedRoots.has(w.root!) && w.root !== lastRootStr)) {
+						knownWithout++;
+					}
+				});
+			});
+		});
+
+		const pctWith = totalWords > 0 ? parseFloat(((knownWith / totalWords) * 100).toFixed(1)) : 0;
+		const pctWithout = totalWords > 0 ? parseFloat(((knownWithout / totalWords) * 100).toFixed(1)) : 0;
+		const recitedWords = getSalahWordsForRoot(lastRootStr);
+
+		return {
+			root: lastRootStr,
+			rootArabic: rootItem.rootArabic,
+			meaning: rootItem.meaning,
+			words: recitedWords,
+			pctBefore: pctWithout,
+			pctAfter: pctWith,
+			increase: parseFloat((pctWith - pctWithout).toFixed(1))
+		};
+	}, [db, salahDb, learnedRoots, learnedHistory]);
 
 	// 2. Count total unique roots in Salah
 	const uniqueSalahRootsCount = useMemo(() => {
@@ -693,11 +749,11 @@ export default function RootsExplorer() {
 					<div className="tab-content dashboard-tab">
 						{/* Dashboard Header Info */}
 						<div className="dashboard-header-container">
-							<h2>Daily Prayer Dashboard</h2>
+							<h2>Understand what you recite in Salah.</h2>
 							<p>Study by impact. Focus on the roots that optimize your daily Salah comprehension first.</p>
 						</div>
 
-						{/* Split Layout: Focus Target on Left, Overall Coverage on Right */}
+						{/* Three-Column Dashboard Grid Layout */}
 						<div className="dashboard-grid-layout">
 							{/* Left Column: Interactive Study Focus Card */}
 							<div className="hero-focus-card card-box">
@@ -764,7 +820,7 @@ export default function RootsExplorer() {
 															</span>
 														</div>
 													</div>
-								) : (
+												) : (
 													<div className="focus-root-recitations">
 														<div className="focus-recitation-title">Linguistic Context:</div>
 														<span className="focus-section-link">Does not occur in prayers directly, but builds general Qur'anic vocabulary.</span>
@@ -811,11 +867,70 @@ export default function RootsExplorer() {
 								})()}
 							</div>
 
-							{/* Right Column: Hero circular progress of Salah coverage & stats */}
+							{/* Middle Column: Last Learned Momentum Card */}
+							<div className="last-learned-card card-box">
+								<div className="last-learned-header">
+									<span className="last-learned-title">⚡ Last Learned Root</span>
+								</div>
+								
+								{lastLearnedDetails ? (
+									<div className="last-learned-body">
+										<div className="last-root-display">
+											<div className="last-root-arabic-group">
+												<span className="last-root-arabic">{lastLearnedDetails.rootArabic}</span>
+												<span className="last-root-translit">({lastLearnedDetails.root})</span>
+											</div>
+											<div className="last-root-meaning">"{lastLearnedDetails.meaning}"</div>
+										</div>
+
+										<div className="last-learned-words-box">
+											<div className="last-learned-words-title">You now understand:</div>
+											{lastLearnedDetails.words.length > 0 ? (
+												<div className="last-learned-words-flex">
+													{lastLearnedDetails.words.slice(0, 3).map((w, idx) => (
+														<div key={`${w.text}-${idx}`} className="last-word-item">
+															<span className="last-word-check">✓</span>
+															<span className="last-word-text">{w.text}</span>
+															<span className="last-word-translation">({w.meaning})</span>
+														</div>
+													))}
+													{lastLearnedDetails.words.length > 3 && (
+														<span className="more-words-badge">+{lastLearnedDetails.words.length - 3} more</span>
+													)}
+												</div>
+											) : (
+												<div className="last-learned-general-msg">
+													✓ Expands general Quranic vocabulary
+												</div>
+											)}
+										</div>
+
+										<div className="last-learned-coverage-shift">
+											<span className="shift-label">Salah coverage increased:</span>
+											<div className="shift-values">
+												<span className="shift-val-before">{lastLearnedDetails.pctBefore}%</span>
+												<span className="shift-arrow">→</span>
+												<span className="shift-val-after success">{lastLearnedDetails.pctAfter}%</span>
+												{lastLearnedDetails.increase > 0 && (
+													<span className="shift-gain-badge">+{lastLearnedDetails.increase}%</span>
+												)}
+											</div>
+										</div>
+									</div>
+								) : (
+									<div className="last-learned-placeholder">
+										<div className="placeholder-icon">🌱</div>
+										<h4>Your Momentum</h4>
+										<p>Mark your first root as learned from the Study Target to activate your momentum tracker here.</p>
+									</div>
+								)}
+							</div>
+
+							{/* Right Column: Path to Understanding Your Salah progress & stats */}
 							<div className="card-box hero-progress-panel">
 								<div className="progress-header">
-									<h3>Salah Coverage</h3>
-									<p>Your understanding of recited daily prayers</p>
+									<h3>Path to Understanding Your Salah</h3>
+									<p>Progress towards mastering daily prayers</p>
 								</div>
 
 								<div className="circular-progress-hero">
@@ -840,18 +955,23 @@ export default function RootsExplorer() {
 									</div>
 								</div>
 
-								<div className="progress-substats-row">
-									<div className="substat-item">
-										<span className="substat-label">Quran Coverage</span>
-										<span className="substat-value">{quranCoverage}%</span>
+								<div className="progress-level-badge">
+									<span className="level-lbl">Level</span>
+									<span className="level-val">{getSalahCoverageLevel(overallSalahCoverage)}</span>
+								</div>
+
+								<div className="salah-path-overview">
+									<div className="path-metric-item">
+										<span className="path-metric-val">{uniqueSalahRootsCount}</span>
+										<span className="path-metric-lbl">roots total</span>
 									</div>
-									<div className="substat-item">
-										<span className="substat-label">Salah Roots</span>
-										<span className="substat-value success">{learnedSalahRootsCount} / {uniqueSalahRootsCount}</span>
+									<div className="path-metric-item success">
+										<span className="path-metric-val">{learnedSalahRootsCount}</span>
+										<span className="path-metric-lbl">learned</span>
 									</div>
-									<div className="substat-item" style={{ gridColumn: "span 2" }}>
-										<span className="substat-label">Total Learned Roots</span>
-										<span className="substat-value">{learnedRoots.size} unique roots</span>
+									<div className="path-metric-item warning">
+										<span className="path-metric-val">{uniqueSalahRootsCount - learnedSalahRootsCount}</span>
+										<span className="path-metric-lbl">remaining</span>
 									</div>
 								</div>
 							</div>

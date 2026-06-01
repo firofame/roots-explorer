@@ -1345,8 +1345,8 @@
 
 .dashboard-grid-layout {
 	display: grid;
-	grid-template-columns: 1.25fr 0.75fr;
-	gap: 24px;
+	grid-template-columns: 1.15fr 0.95fr 0.9fr;
+	gap: 20px;
 	margin-bottom: 24px;
 }
 
@@ -1781,4 +1781,295 @@
 		align-self: stretch;
 	}
 }
+
+/* ── Last Learned Card ── */
+.last-learned-card {
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	height: 100%;
+}
+
+.last-learned-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 16px;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+	padding-bottom: 12px;
+}
+
+.last-learned-title {
+	font-size: 1.05rem;
+	font-weight: 600;
+	color: var(--gold-highlight);
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.last-learned-body {
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+	height: 100%;
+	justify-content: space-between;
+}
+
+.last-root-display {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	background: rgba(255, 255, 255, 0.015);
+	border: 1px solid rgba(255, 255, 255, 0.03);
+	border-radius: var(--control-radius);
+	padding: 10px 14px;
+}
+
+.last-root-arabic-group {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+}
+
+.last-root-arabic {
+	font-family: 'Amiri', serif;
+	font-size: 1.8rem;
+	font-weight: bold;
+	color: var(--gold-highlight);
+	line-height: 1.1;
+}
+
+.last-root-translit {
+	font-size: 0.75rem;
+	color: var(--text-muted);
+	font-weight: 600;
+}
+
+.last-root-meaning {
+	font-size: 0.95rem;
+	font-weight: 600;
+	color: var(--text-main);
+	max-width: 140px;
+	text-align: right;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.last-learned-words-box {
+	background: rgba(0, 0, 0, 0.2);
+	border: 1px solid rgba(255, 255, 255, 0.04);
+	border-radius: var(--control-radius);
+	padding: 12px;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.last-learned-words-title {
+	font-size: 0.72rem;
+	text-transform: uppercase;
+	color: var(--gold-soft);
+	letter-spacing: 0.5px;
+	font-weight: 600;
+}
+
+.last-learned-words-flex {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.last-word-item {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	font-size: 0.85rem;
+}
+
+.last-word-check {
+	color: #34d399;
+	font-weight: bold;
+}
+
+.last-word-text {
+	font-family: 'Amiri', serif;
+	font-size: 1.1rem;
+	color: var(--text-main);
+}
+
+.last-word-translation {
+	color: var(--text-muted);
+	font-size: 0.75rem;
+}
+
+.more-words-badge {
+	font-size: 0.7rem;
+	color: var(--text-muted);
+	background: rgba(255, 255, 255, 0.05);
+	padding: 2px 6px;
+	border-radius: 6px;
+	align-self: flex-start;
+}
+
+.last-learned-general-msg {
+	font-size: 0.82rem;
+	color: var(--text-muted);
+	font-style: italic;
+}
+
+.last-learned-coverage-shift {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	border-top: 1px dashed rgba(255, 255, 255, 0.06);
+	padding-top: 10px;
+}
+
+.shift-label {
+	font-size: 0.75rem;
+	color: var(--text-muted);
+}
+
+.shift-values {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	font-size: 1rem;
+	font-weight: 700;
+}
+
+.shift-val-before {
+	color: var(--text-muted);
+}
+
+.shift-arrow {
+	color: var(--text-muted);
+}
+
+.shift-val-after.success {
+	color: #34d399;
+}
+
+.shift-gain-badge {
+	font-size: 0.75rem;
+	background: rgba(16, 185, 129, 0.12);
+	color: #34d399;
+	padding: 2px 6px;
+	border-radius: 4px;
+	font-weight: 800;
+	margin-left: 4px;
+}
+
+.last-learned-placeholder {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	text-align: center;
+	padding: 20px 10px;
+	color: var(--text-muted);
+	height: 100%;
+}
+
+.last-learned-placeholder .placeholder-icon {
+	font-size: 2.2rem;
+	margin-bottom: 12px;
+	opacity: 0.6;
+}
+
+.last-learned-placeholder h4 {
+	font-size: 0.95rem;
+	color: var(--text-main);
+	margin-bottom: 6px;
+}
+
+.last-learned-placeholder p {
+	font-size: 0.78rem;
+	line-height: 1.4;
+	max-width: 200px;
+	margin: 0;
+}
+
+/* ── Coverage level badge styling ── */
+.progress-level-badge {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	text-align: center;
+	gap: 4px;
+	margin-top: 4px;
+	margin-bottom: 12px;
+	padding: 8px 12px;
+	background: rgba(212, 175, 55, 0.04);
+	border: 1px solid rgba(212, 175, 55, 0.12);
+	border-radius: var(--control-radius);
+}
+
+.progress-level-badge .level-lbl {
+	font-size: 0.68rem;
+	text-transform: uppercase;
+	color: var(--gold-soft);
+	letter-spacing: 0.5px;
+	font-weight: 600;
+}
+
+.progress-level-badge .level-val {
+	font-size: 0.85rem;
+	color: var(--text-main);
+	font-weight: 600;
+}
+
+/* ── Salah path overview counter blocks ── */
+.salah-path-overview {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 10px;
+	border-top: 1px solid rgba(255, 255, 255, 0.06);
+	padding-top: 14px;
+	text-align: center;
+}
+
+.path-metric-item {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	background: rgba(255, 255, 255, 0.015);
+	border: 1px solid rgba(255, 255, 255, 0.03);
+	border-radius: var(--control-radius);
+	padding: 8px 4px;
+}
+
+.path-metric-item.success {
+	border-color: rgba(16, 185, 129, 0.15);
+	background: rgba(16, 185, 129, 0.03);
+}
+
+.path-metric-item.warning {
+	border-color: rgba(212, 175, 55, 0.15);
+	background: rgba(212, 175, 55, 0.03);
+}
+
+.path-metric-val {
+	font-size: 1.1rem;
+	font-weight: 700;
+	color: var(--text-main);
+}
+
+.path-metric-item.success .path-metric-val {
+	color: #34d399;
+}
+
+.path-metric-item.warning .path-metric-val {
+	color: var(--gold-soft);
+}
+
+.path-metric-lbl {
+	font-size: 0.65rem;
+	color: var(--text-muted);
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+}
+
 
