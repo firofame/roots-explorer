@@ -150,14 +150,41 @@
   }
 }
 
-@media (max-width: 640px) {
-  .app-header h1 {
-    font-size: 1.8rem;
+@media (max-width: 768px) {
+  .app-shell {
+    padding: 12px 12px 90px 12px; /* bottom padding offsets sticky bottom nav */
   }
+  
+  .app-header {
+    margin-top: 8px;
+    margin-bottom: 16px;
+    max-width: 100%;
+  }
+  
+  .logo-container {
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+  
   .logo-icon {
-    font-size: 1.8rem;
+    font-size: 1.5rem;
   }
+  
+  .app-header h1 {
+    font-size: 1.35rem;
+    letter-spacing: -0.3px;
+  }
+  
   .app-subtitle {
-    font-size: 0.85rem;
+    display: none; /* Hide subtitle on mobile for space conservation */
+  }
+  
+  .main-container {
+    margin-bottom: 12px;
+  }
+  
+  .app-footer {
+    padding: 12px 0;
+    margin-bottom: 60px; /* offset above bottom bar */
   }
 }

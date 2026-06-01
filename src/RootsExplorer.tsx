@@ -179,6 +179,25 @@ const SALAH_DAILY_RECITATIONS: Record<string | number, { frequency: number; unit
 	114: { frequency: 2, unit: "times", description: "Commonly recited Surah" },
 };
 
+// Helper to get formatted local date (YYYY-MM-DD)
+const getLocalDateString = (dateObj: Date = new Date()) => {
+	const year = dateObj.getFullYear();
+	const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+	const day = String(dateObj.getDate()).padStart(2, '0');
+	return `${year}-${month}-${day}`;
+};
+
+// Helper to calculate difference in days between two YYYY-MM-DD strings
+const getDaysDiff = (dateStr1: string, dateStr2: string) => {
+	if (!dateStr1 || !dateStr2) return 999;
+	const d1 = new Date(dateStr1);
+	const d2 = new Date(dateStr2);
+	d1.setHours(0, 0, 0, 0);
+	d2.setHours(0, 0, 0, 0);
+	const diffTime = Math.abs(d2.getTime() - d1.getTime());
+	return Math.round(diffTime / (1000 * 60 * 60 * 24));
+};
+
 export default function RootsExplorer() {
 	const [db, setDb] = useState<RootsDatabase | null>(null);
 	const [salahDb, setSalahDb] = useState<SalahSurah[] | null>(null);
@@ -207,6 +226,15 @@ export default function RootsExplorer() {
 	// Streak and activity tracking states
 	const [streakCount, setStreakCount] = useState<number>(() => {
 		const saved = localStorage.getItem("learningStreak");
+		const lastDate = localStorage.getItem("lastLearningDate") || "";
+		if (lastDate) {
+			const todayStr = getLocalDateString();
+			const diff = getDaysDiff(todayStr, lastDate);
+			if (diff > 1) {
+				localStorage.setItem("learningStreak", "0");
+				return 0;
+			}
+		}
 		return saved ? parseInt(saved, 10) : 0;
 	});
 	const [lastLearningDate, setLastLearningDate] = useState<string>(() => {
@@ -234,6 +262,17 @@ export default function RootsExplorer() {
 		ayahIndex: number;
 		wordIndex: number;
 	} | null>(null);
+
+	// Mobile-first responsive check
+	const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+	useEffect(() => {
+		const checkMobile = () => {
+			setIsMobile(window.innerWidth <= 768);
+		};
+		checkMobile();
+		window.addEventListener("resize", checkMobile);
+		return () => window.removeEventListener("resize", checkMobile);
+	}, []);
 
 	// Fetch databases and merge
 	useEffect(() => {
@@ -287,36 +326,7 @@ export default function RootsExplorer() {
 		void loadData();
 	}, []);
 
-	// Helper to get formatted local date (YYYY-MM-DD)
-	const getLocalDateString = (dateObj: Date = new Date()) => {
-		const year = dateObj.getFullYear();
-		const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-		const day = String(dateObj.getDate()).padStart(2, '0');
-		return `${year}-${month}-${day}`;
-	};
 
-	// Helper to calculate difference in days between two YYYY-MM-DD strings
-	const getDaysDiff = (dateStr1: string, dateStr2: string) => {
-		if (!dateStr1 || !dateStr2) return 999;
-		const d1 = new Date(dateStr1);
-		const d2 = new Date(dateStr2);
-		d1.setHours(0, 0, 0, 0);
-		d2.setHours(0, 0, 0, 0);
-		const diffTime = Math.abs(d2.getTime() - d1.getTime());
-		return Math.round(diffTime / (1000 * 60 * 60 * 24));
-	};
-
-	// Check if learning streak is broken on load/activity changes
-	useEffect(() => {
-		if (lastLearningDate) {
-			const todayStr = getLocalDateString();
-			const diff = getDaysDiff(todayStr, lastLearningDate);
-			if (diff > 1) {
-				setStreakCount(0);
-				localStorage.setItem("learningStreak", "0");
-			}
-		}
-	}, [lastLearningDate]);
 
 	// Toggle learned status
 	const toggleLearned = (rootStr: string) => {
@@ -440,7 +450,7 @@ export default function RootsExplorer() {
 	}, [salahDb, learnedRoots]);
 
 	// Helper to find the actual Arabic words recited in Salah that match a given root
-	const getSalahWordsForRoot = (rootStr: string) => {
+	const getSalahWordsForRoot = useCallback((rootStr: string) => {
 		if (!salahDb) return [];
 		const results: { text: string; sectionName: string; meaning?: string }[] = [];
 		const seen = new Set<string>();
@@ -464,7 +474,7 @@ export default function RootsExplorer() {
 			});
 		});
 		return results;
-	};
+	}, [salahDb]);
 
 	// 1. Calculate overall Salah coverage (percentage of known words across all prayer parts)
 	const overallSalahCoverage = useMemo(() => {
@@ -533,7 +543,7 @@ export default function RootsExplorer() {
 			pctAfter: pctWith,
 			increase: parseFloat((pctWith - pctWithout).toFixed(1))
 		};
-	}, [db, salahDb, learnedRoots, learnedHistory]);
+	}, [db, salahDb, learnedRoots, learnedHistory, getSalahWordsForRoot]);
 
 	// 2. Count total unique roots in Salah
 	const uniqueSalahRootsCount = useMemo(() => {
@@ -742,7 +752,7 @@ export default function RootsExplorer() {
 	}, [salahDb, salahRootGains]);
 
 	// Render collapsible Why Learn section
-	const renderWhyLearnSection = (rootItem: RootData | any, isOpen: boolean, setIsOpen: (open: boolean) => void) => {
+	const renderWhyLearnSection = (rootItem: { root: string; occurrences: number }, isOpen: boolean, setIsOpen: (open: boolean) => void) => {
 		const relevance = getSalahRelevance(rootItem.root);
 		
 		if (!relevance) {
@@ -921,7 +931,19 @@ export default function RootsExplorer() {
 			setSelectedRoot(found);
 			setSearchQuery(found.rootArabic);
 			setActiveTab("explorer");
+			window.scrollTo({ top: 0, behavior: "smooth" });
 		}
+	};
+
+	const handleTabChange = (tab: string) => {
+		setActiveTab(tab);
+		if (tab === "explorer") {
+			setSearchQuery("");
+			setExplorerPageSize(30);
+		} else if (tab === "salah") {
+			setSelectedWord(null);
+		}
+		window.scrollTo({ top: 0, behavior: "smooth" });
 	};
 
 	if (loading) return <div className="roots-loading">Loading Qur'an Roots Database…</div>;
@@ -934,7 +956,7 @@ export default function RootsExplorer() {
 				<button
 					type="button"
 					className={`tab-btn ${activeTab === "dashboard" ? "active" : ""}`}
-					onClick={() => setActiveTab("dashboard")}
+					onClick={() => handleTabChange("dashboard")}
 				>
 					<span className="tab-icon">📊</span>
 					<span className="tab-label">Dashboard</span>
@@ -942,11 +964,7 @@ export default function RootsExplorer() {
 				<button
 					type="button"
 					className={`tab-btn ${activeTab === "explorer" ? "active" : ""}`}
-					onClick={() => {
-						setActiveTab("explorer");
-						setSearchQuery("");
-						setExplorerPageSize(30);
-					}}
+					onClick={() => handleTabChange("explorer")}
 				>
 					<span className="tab-icon">🔍</span>
 					<span className="tab-label">Root Explorer</span>
@@ -954,7 +972,7 @@ export default function RootsExplorer() {
 				<button
 					type="button"
 					className={`tab-btn ${activeTab === "frequency" ? "active" : ""}`}
-					onClick={() => setActiveTab("frequency")}
+					onClick={() => handleTabChange("frequency")}
 				>
 					<span className="tab-icon">📈</span>
 					<span className="tab-label">Frequency Explorer</span>
@@ -962,10 +980,7 @@ export default function RootsExplorer() {
 				<button
 					type="button"
 					className={`tab-btn ${activeTab === "salah" ? "active" : ""}`}
-					onClick={() => {
-						setActiveTab("salah");
-						setSelectedWord(null);
-					}}
+					onClick={() => handleTabChange("salah")}
 				>
 					<span className="tab-icon">🕌</span>
 					<span className="tab-label">Salah Explorer</span>
@@ -1334,136 +1349,157 @@ export default function RootsExplorer() {
 
 						<div className="explorer-layout-grid">
 							{/* Left Column: Search Results List */}
-							<div className="explorer-list-pane">
-								<h4 className="pane-title">Roots ({explorerFilteredRoots.length})</h4>
-								<div className="explorer-roots-list">
-									{explorerDisplayedRoots.map((r) => {
-										const active = selectedRoot?.root === r.root;
-										const learned = learnedRoots.has(r.root);
-										return (
-											<div
-												key={r.root}
-												className={`explorer-root-item ${active ? "active" : ""} ${learned ? "learned" : ""}`}
-												onClick={() => setSelectedRoot(r)}
-											>
-												<div className="item-arabic">{r.rootArabic}</div>
-												<div className="item-details">
-													<div className="item-header">
-														<span className="item-translit">{r.root}</span>
-														<span className="item-rank">#{r.rank}</span>
+							{(!isMobile || !selectedRoot) && (
+								<div className="explorer-list-pane">
+									<h4 className="pane-title">Roots ({explorerFilteredRoots.length})</h4>
+									<div className="explorer-roots-list">
+										{explorerDisplayedRoots.map((r) => {
+											const active = selectedRoot?.root === r.root;
+											const learned = learnedRoots.has(r.root);
+											return (
+												<div
+													key={r.root}
+													className={`explorer-root-item ${active ? "active" : ""} ${learned ? "learned" : ""}`}
+													onClick={() => {
+														setSelectedRoot(r);
+														if (isMobile) {
+															window.scrollTo({ top: 0, behavior: "smooth" });
+														}
+													}}
+												>
+													<div className="item-arabic">{r.rootArabic}</div>
+													<div className="item-details">
+														<div className="item-header">
+															<span className="item-translit">{r.root}</span>
+															<span className="item-rank">#{r.rank}</span>
+														</div>
+														<div className="item-meaning">{r.meaning}</div>
 													</div>
-													<div className="item-meaning">{r.meaning}</div>
+													<div className="item-badge-container">
+														<span className="item-count-badge">{r.occurrences}×</span>
+														{learned && <span className="learned-dot">✓</span>}
+													</div>
 												</div>
-												<div className="item-badge-container">
-													<span className="item-count-badge">{r.occurrences}×</span>
-													{learned && <span className="learned-dot">✓</span>}
-												</div>
-											</div>
-										);
-									})}
-									{explorerFilteredRoots.length === 0 && (
-										<div className="empty-message">No matching roots found.</div>
-									)}
-									{explorerFilteredRoots.length > explorerPageSize && (
-										<button
-											type="button"
-											className="load-more-btn"
-											onClick={() => setExplorerPageSize((prev) => prev + 30)}
-										>
-											Load More...
-										</button>
-									)}
-								</div>
-							</div>
-
-							{/* Right Column: Detailed View */}
-							<div className="explorer-detail-pane">
-								{selectedRoot ? (
-									<div className="root-detail-card card-box">
-										<div className="detail-header">
-											<div className="detail-header-text">
-												<span className="detail-rank">Rank #{selectedRoot.rank} · {selectedRoot.occurrences}× in Quran</span>
-												<h2 className="detail-title-arabic">{selectedRoot.rootArabic}</h2>
-												<div className="detail-subtitle">{selectedRoot.root} (meaning: "{selectedRoot.meaning}")</div>
-											</div>
+											);
+										})}
+										{explorerFilteredRoots.length === 0 && (
+											<div className="empty-message">No matching roots found.</div>
+										)}
+										{explorerFilteredRoots.length > explorerPageSize && (
 											<button
 												type="button"
-												className={`detail-learn-toggle-btn ${learnedRoots.has(selectedRoot.root) ? "learned" : ""}`}
-												onClick={() => toggleLearned(selectedRoot.root)}
+												className="load-more-btn"
+												onClick={() => setExplorerPageSize((prev) => prev + 30)}
 											>
-												{learnedRoots.has(selectedRoot.root) ? "✓ Learned" : "☆ Learn Root"}
+												Load More...
 											</button>
-										</div>
+										)}
+									</div>
+								</div>
+							)}
 
-										{/* Collapsible Why Learn Section */}
-										{renderWhyLearnSection(selectedRoot, detailWhyLearnOpen, setDetailWhyLearnOpen)}
-
-										{/* Lemmas Family */}
-										<div className="detail-section">
-											<h4 className="detail-sec-title">Derived Word Family (Lemmas)</h4>
-											<div className="detail-lemmas-list">
-												{selectedRoot.lemmas.map((l) => (
-													<div key={l.lemma} className="lemma-card">
-														<span className="lemma-ar">{l.lemmaArabic}</span>
-														<span className="lemma-en">{l.lemma}</span>
-														<span className="lemma-ct">{l.count} occurrences</span>
-													</div>
-												))}
-												{selectedRoot.lemmas.length === 0 && <p className="empty-small">No distinct lemmas cataloged.</p>}
+							{/* Right Column: Detailed View */}
+							{(!isMobile || selectedRoot) && (
+								<div className="explorer-detail-pane">
+									{selectedRoot ? (
+										<div className="root-detail-card card-box">
+											{isMobile && (
+												<button
+													type="button"
+													className="mobile-detail-back-btn"
+													onClick={() => {
+														setSelectedRoot(null);
+														window.scrollTo({ top: 0, behavior: "smooth" });
+													}}
+												>
+													← Back to Roots List
+												</button>
+											)}
+											<div className="detail-header">
+												<div className="detail-header-text">
+													<span className="detail-rank">Rank #{selectedRoot.rank} · {selectedRoot.occurrences}× in Quran</span>
+													<h2 className="detail-title-arabic">{selectedRoot.rootArabic}</h2>
+													<div className="detail-subtitle">{selectedRoot.root} (meaning: "{selectedRoot.meaning}")</div>
+												</div>
+												<button
+													type="button"
+													className={`detail-learn-toggle-btn ${learnedRoots.has(selectedRoot.root) ? "learned" : ""}`}
+													onClick={() => toggleLearned(selectedRoot.root)}
+												>
+													{learnedRoots.has(selectedRoot.root) ? "✓ Learned" : "☆ Learn Root"}
+												</button>
 											</div>
-										</div>
 
-										{/* Sibling / Related Roots */}
-										<div className="detail-section">
-											<h4 className="detail-sec-title">Linguistic Siblings (Related Roots)</h4>
-											<p className="detail-sec-desc">Roots sharing at least two consonant letters (phonetic overlaps):</p>
-											<div className="related-roots-list">
-												{relatedRoots.map((rr) => (
-													<button
-														key={rr.root}
-														type="button"
-														className="related-root-btn"
-														onClick={() => setSelectedRoot(rr)}
-													>
-														<span className="rr-ar">{rr.rootArabic}</span>
-														<span className="rr-translit">{rr.root}</span>
-														<span className="rr-mean" title={rr.meaning}>{rr.meaning}</span>
-													</button>
-												))}
-												{relatedRoots.length === 0 && <p className="empty-small">No siblings found sharing 2 letters.</p>}
+											{/* Collapsible Why Learn Section */}
+											{renderWhyLearnSection(selectedRoot, detailWhyLearnOpen, setDetailWhyLearnOpen)}
+
+											{/* Lemmas Family */}
+											<div className="detail-section">
+												<h4 className="detail-sec-title">Derived Word Family (Lemmas)</h4>
+												<div className="detail-lemmas-list">
+													{selectedRoot.lemmas.map((l) => (
+														<div key={l.lemma} className="lemma-card">
+															<span className="lemma-ar">{l.lemmaArabic}</span>
+															<span className="lemma-en">{l.lemma}</span>
+															<span className="lemma-ct">{l.count} occurrences</span>
+														</div>
+													))}
+													{selectedRoot.lemmas.length === 0 && <p className="empty-small">No distinct lemmas cataloged.</p>}
+												</div>
 											</div>
-										</div>
 
-										{/* Example Verses */}
-										<div className="detail-section">
-											<h4 className="detail-sec-title">Example Quranic Verses</h4>
-											<div className="example-verses-list">
-												{selectedRoot.sampleVerses && selectedRoot.sampleVerses.length > 0 ? (
-													selectedRoot.sampleVerses.map((v, index) => (
-														<a
-															key={`${v.surah}-${v.ayah}-${index}`}
-															href={`https://quran.com/${v.surah}/${v.ayah}`}
-															target="_blank"
-															rel="noreferrer"
-															className="verse-ref-link"
+											{/* Sibling / Related Roots */}
+											<div className="detail-section">
+												<h4 className="detail-sec-title">Linguistic Siblings (Related Roots)</h4>
+												<p className="detail-sec-desc">Roots sharing at least two consonant letters (phonetic overlaps):</p>
+												<div className="related-roots-list">
+													{relatedRoots.map((rr) => (
+														<button
+															key={rr.root}
+															type="button"
+															className="related-root-btn"
+															onClick={() => setSelectedRoot(rr)}
 														>
-															📖 Surah {v.surah}, Ayah {v.ayah} <span className="arrow">↗</span>
-														</a>
-													))
-												) : (
-													<span className="empty-small">No sample verses loaded.</span>
-												)}
+															<span className="rr-ar">{rr.rootArabic}</span>
+															<span className="rr-translit">{rr.root}</span>
+															<span className="rr-mean" title={rr.meaning}>{rr.meaning}</span>
+														</button>
+													))}
+													{relatedRoots.length === 0 && <p className="empty-small">No siblings found sharing 2 letters.</p>}
+												</div>
+											</div>
+
+											{/* Example Verses */}
+											<div className="detail-section">
+												<h4 className="detail-sec-title">Example Quranic Verses</h4>
+												<div className="example-verses-list">
+													{selectedRoot.sampleVerses && selectedRoot.sampleVerses.length > 0 ? (
+														selectedRoot.sampleVerses.map((v, index) => (
+															<a
+																key={`${v.surah}-${v.ayah}-${index}`}
+																href={`https://quran.com/${v.surah}/${v.ayah}`}
+																target="_blank"
+																rel="noreferrer"
+																className="verse-ref-link"
+															>
+																📖 Surah {v.surah}, Ayah {v.ayah} <span className="arrow">↗</span>
+															</a>
+														))
+													) : (
+														<span className="empty-small">No sample verses loaded.</span>
+													)}
+												</div>
 											</div>
 										</div>
-									</div>
-								) : (
-									<div className="root-detail-placeholder card-box">
-										<span className="placeholder-icon">🔍</span>
-										<h3>Select a Root</h3>
-										<p>Click on any root in the list or search above to view derived word families, sibling relationships, and example verses.</p>
-									</div>
-								)}
-							</div>
+									) : (
+										<div className="root-detail-placeholder card-box">
+											<span className="placeholder-icon">🔍</span>
+											<h3>Select a Root</h3>
+											<p>Click on any root in the list or search above to view derived word families, sibling relationships, and example verses.</p>
+										</div>
+									)}
+								</div>
+							)}
 						</div>
 					</div>
 				)}
@@ -1660,89 +1696,101 @@ export default function RootsExplorer() {
 								)}
 							</div>
 
-							{/* Right Column: Clicked Word Details */}
-							<div className="salah-word-details-pane card-box">
-								{selectedWord ? (
-									<div className="wd-details-wrapper">
-										<div className="wd-word-title-row">
-											<span className="wd-selected-ar">{selectedWord.word.text}</span>
-											{selectedWord.word.root ? (
-												<span
-													className="wd-root-badge clickable-root"
-													onClick={() => selectedWord.word.root && jumpToRootExplorer(selectedWord.word.root)}
-													title="Click to explore root details"
-												>
-													Root: {selectedWord.word.rootArabic} ({selectedWord.word.root})
-												</span>
-											) : (
-												<span className="wd-root-badge particle-badge">Grammar Particle</span>
-											)}
-										</div>
-
-										<div className="wd-body-content">
-											<div className="wd-field">
-												<label className="wd-label">English Translation</label>
-												<p className="wd-val-translation">
-													{selectedWord.word.meaning || selectedWordRootDetails?.meaning || "Meaning dictionary reference."}
-												</p>
+							{/* Right Column / Bottom Sheet: Clicked Word Details */}
+							{(!isMobile || selectedWord) && (
+								<div className={`salah-word-details-pane card-box ${isMobile ? "mobile-bottom-sheet" : ""}`}>
+									{isMobile && (
+										<button
+											type="button"
+											className="close-sheet-btn"
+											onClick={() => setSelectedWord(null)}
+											aria-label="Close word details"
+										>
+											✕
+										</button>
+									)}
+									{selectedWord ? (
+										<div className="wd-details-wrapper">
+											<div className="wd-word-title-row">
+												<span className="wd-selected-ar">{selectedWord.word.text}</span>
+												{selectedWord.word.root ? (
+													<span
+														className="wd-root-badge clickable-root"
+														onClick={() => selectedWord.word.root && jumpToRootExplorer(selectedWord.word.root)}
+														title="Click to explore root details"
+													>
+														Root: {selectedWord.word.rootArabic} ({selectedWord.word.root})
+													</span>
+												) : (
+													<span className="wd-root-badge particle-badge">Grammar Particle</span>
+												)}
 											</div>
 
-											{selectedWord.word.root && selectedWordRootDetails ? (
-												<>
-													<div className="wd-field">
-														<label className="wd-label">Consonant Root Info</label>
-														<p className="wd-val-root">
-															The triliteral root <strong>{selectedWord.word.rootArabic}</strong> has <strong>{selectedWordRootDetails.occurrences}</strong> occurrences in the Qur'an and is ranked <strong>#{selectedWordRootDetails.rank}</strong> in overall frequency.
-														</p>
-													</div>
+											<div className="wd-body-content">
+												<div className="wd-field">
+													<label className="wd-label">English Translation</label>
+													<p className="wd-val-translation">
+														{selectedWord.word.meaning || selectedWordRootDetails?.meaning || "Meaning dictionary reference."}
+													</p>
+												</div>
 
-													<div className="wd-field">
-														<label className="wd-label">Learned status</label>
+												{selectedWord.word.root && selectedWordRootDetails ? (
+													<>
+														<div className="wd-field">
+															<label className="wd-label">Consonant Root Info</label>
+															<p className="wd-val-root">
+																The triliteral root <strong>{selectedWord.word.rootArabic}</strong> has <strong>{selectedWordRootDetails.occurrences}</strong> occurrences in the Qur'an and is ranked <strong>#{selectedWordRootDetails.rank}</strong> in overall frequency.
+															</p>
+														</div>
+
+														<div className="wd-field">
+															<label className="wd-label">Learned status</label>
+															<button
+																type="button"
+																className={`wd-learn-action-btn ${learnedRoots.has(selectedWord.word.root) ? "learned" : ""}`}
+																onClick={() => selectedWord.word.root && toggleLearned(selectedWord.word.root)}
+															>
+																{learnedRoots.has(selectedWord.word.root) ? "✓ Learned root" : "☆ Learn this root"}
+															</button>
+														</div>
+
+														<div className="wd-field">
+															<label className="wd-label">Morphological Family (Other words in Quran)</label>
+															<p className="wd-lemma-tip">Discover family connections! All these words share the root <strong>{selectedWord.word.rootArabic}</strong>:</p>
+															<div className="wd-family-lemmas-grid">
+																{selectedWordRootDetails.lemmas.slice(0, 6).map((l) => (
+																	<div key={l.lemma} className="wd-lemma-badge">
+																		<span className="lemma-ar">{l.lemmaArabic}</span>
+																		<span className="lemma-count">{l.count}×</span>
+																	</div>
+																))}
+															</div>
+														</div>
+
 														<button
 															type="button"
-															className={`wd-learn-action-btn ${learnedRoots.has(selectedWord.word.root) ? "learned" : ""}`}
-															onClick={() => selectedWord.word.root && toggleLearned(selectedWord.word.root)}
+															className="wd-full-morphology-btn"
+															onClick={() => selectedWord.word.root && jumpToRootExplorer(selectedWord.word.root)}
 														>
-															{learnedRoots.has(selectedWord.word.root) ? "✓ Learned root" : "☆ Learn this root"}
+															Explore full root dictionary entry →
 														</button>
+													</>
+												) : (
+													<div className="particle-info-box">
+														<p>This word is a grammatical particle, conjunction, or proper noun and does not stem from a triliteral root. Particles are building blocks of grammar and are memorized directly.</p>
 													</div>
-
-													<div className="wd-field">
-														<label className="wd-label">Morphological Family (Other words in Quran)</label>
-														<p className="wd-lemma-tip">Discover family connections! All these words share the root <strong>{selectedWord.word.rootArabic}</strong>:</p>
-														<div className="wd-family-lemmas-grid">
-															{selectedWordRootDetails.lemmas.slice(0, 6).map((l) => (
-																<div key={l.lemma} className="wd-lemma-badge">
-																	<span className="lemma-ar">{l.lemmaArabic}</span>
-																	<span className="lemma-count">{l.count}×</span>
-																</div>
-															))}
-														</div>
-													</div>
-
-													<button
-														type="button"
-														className="wd-full-morphology-btn"
-														onClick={() => selectedWord.word.root && jumpToRootExplorer(selectedWord.word.root)}
-													>
-														Explore full root dictionary entry →
-													</button>
-												</>
-											) : (
-												<div className="particle-info-box">
-													<p>This word is a grammatical particle, conjunction, or proper noun and does not stem from a triliteral root. Particles are building blocks of grammar and are memorized directly.</p>
-												</div>
-											)}
+												)}
+											</div>
 										</div>
-									</div>
-								) : (
-									<div className="wd-placeholder">
-										<span className="placeholder-icon">🕌</span>
-										<h3>Salah Explorer</h3>
-										<p>Click on any word in the prayer reader on the left to see its translation, triliteral root, frequency, and family sibling words.</p>
-									</div>
-								)}
-							</div>
+									) : (
+										<div className="wd-placeholder">
+											<span className="placeholder-icon">🕌</span>
+											<h3>Salah Explorer</h3>
+											<p>Click on any word in the prayer reader on the left to see its translation, triliteral root, frequency, and family sibling words.</p>
+										</div>
+									)}
+								</div>
+							)}
 						</div>
 					</div>
 				)}
