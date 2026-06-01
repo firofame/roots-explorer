@@ -279,8 +279,8 @@ export default function RootsExplorer() {
 		async function loadData() {
 			try {
 				const [rootsRes, salahRes] = await Promise.all([
-					fetch("/quran-roots.json"),
-					fetch("/salah-data.json"),
+					fetch(`${import.meta.env.BASE_URL}quran-roots.json`),
+					fetch(`${import.meta.env.BASE_URL}salah-data.json`),
 				]);
 				if (!rootsRes.ok || !salahRes.ok) throw new Error("fetch failed");
 				const fetchedRoots = (await rootsRes.json()) as RootsDatabase;
